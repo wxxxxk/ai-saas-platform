@@ -2,7 +2,7 @@ package com.wxxk.aisaas.job.entity;
 
 import com.wxxk.aisaas.common.entity.BaseEntity;
 import com.wxxk.aisaas.job.enums.JobStatus;
-import com.wxxk.aisaas.module.entity.Module;
+import com.wxxk.aisaas.module.entity.AiModule;
 import com.wxxk.aisaas.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,7 +26,7 @@ public class Job extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
-    private Module module;
+    private AiModule module;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -8,8 +8,8 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "modules")
-public class Module extends BaseEntity {
+@Table(name = "ai_modules")
+public class AiModule extends BaseEntity {
 
     // AI 기능 식별자 (예: TEXT_GENERATION, IMAGE_GENERATION)
     @Column(nullable = false, unique = true)
