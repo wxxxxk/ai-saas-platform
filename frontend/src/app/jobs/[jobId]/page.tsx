@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getJob } from "@/lib/api";
+import { getAssets, getJob } from "@/lib/api";
+import type { Asset } from "@/lib/api";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING:   "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
@@ -20,17 +21,72 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function AssetList({ assets }: { assets: Asset[] }) {
+  if (assets.length === 0) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        연결된 Asset이 없습니다.
+      </p>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-black/[.08] dark:border-white/[.1]">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-black/[.08] bg-zinc-50 text-left text-xs font-medium text-zinc-500 dark:border-white/[.1] dark:bg-zinc-900 dark:text-zinc-400">
+            <th className="px-4 py-3">File Name</th>
+            <th className="px-4 py-3">Type</th>
+            <th className="px-4 py-3">Size</th>
+            <th className="px-4 py-3">Created At</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-black/[.04] bg-white dark:divide-white/[.06] dark:bg-zinc-950">
+          {assets.map((asset) => (
+            <tr key={asset.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900">
+              <td className="px-4 py-3 text-zinc-800 dark:text-zinc-200">
+                {asset.fileName}
+              </td>
+              <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                {asset.fileType}
+              </td>
+              <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">
+                {formatBytes(asset.fileSizeBytes)}
+              </td>
+              <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">
+                {new Date(asset.createdAt).toLocaleString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default async function JobDetailPage({
   params,
 }: {
   params: Promise<{ jobId: string }>;
 }) {
   const { jobId } = await params;
-  const job = await getJob(jobId);
+  const [job, assets] = await Promise.all([getJob(jobId), getAssets(jobId)]);
 
   return (
     <div className="p-8 max-w-2xl">
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6">
         <Link
           href="/dashboard"
           className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100"
@@ -84,6 +140,13 @@ export default async function JobDetailPage({
           />
         </dl>
       </div>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
+          Assets
+        </h2>
+        <AssetList assets={assets} />
+      </section>
     </div>
   );
 }

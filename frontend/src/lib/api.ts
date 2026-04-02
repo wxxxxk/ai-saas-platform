@@ -1,3 +1,12 @@
+export type Asset = {
+  id: string;
+  jobId: string;
+  fileName: string;
+  fileType: string;
+  fileSizeBytes: number;
+  createdAt: string;
+};
+
 export type AiModule = {
   id: string;
   name: string;
@@ -39,6 +48,18 @@ export async function getJob(jobId: string): Promise<Job> {
 
   if (!res.ok) {
     throw new Error(`Failed to fetch job: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getAssets(jobId: string): Promise<Asset[]> {
+  const res = await fetch(
+    `${BACKEND_URL}/api/jobs/${encodeURIComponent(jobId)}/assets`
+  );
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch assets: ${res.status}`);
   }
 
   return res.json();
