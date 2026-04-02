@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Job } from "@/lib/api";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -40,7 +41,12 @@ export default function JobList({ jobs }: { jobs: Job[] }) {
           {jobs.map((job) => (
             <tr key={job.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900">
               <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                {job.id.slice(0, 8)}…
+                <Link
+                  href={`/jobs/${job.id}`}
+                  className="underline-offset-2 hover:underline"
+                >
+                  {job.id.slice(0, 8)}…
+                </Link>
               </td>
               <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
                 {job.moduleId.slice(0, 8)}…

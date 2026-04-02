@@ -15,6 +15,7 @@ export type Job = {
   moduleId: string;
   status: string;
   creditUsed: number;
+  inputPayload: string | null;
   createdAt: string;
 };
 
@@ -28,6 +29,16 @@ export async function getModules(): Promise<AiModule[]> {
 
   if (!res.ok) {
     throw new Error(`Failed to fetch modules: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getJob(jobId: string): Promise<Job> {
+  const res = await fetch(`${BACKEND_URL}/api/jobs/${encodeURIComponent(jobId)}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch job: ${res.status}`);
   }
 
   return res.json();

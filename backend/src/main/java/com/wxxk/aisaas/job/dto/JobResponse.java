@@ -10,6 +10,7 @@ public record JobResponse(
         UUID moduleId,
         String status,
         int creditUsed,
+        String inputPayload,
         LocalDateTime createdAt
 ) {
     public static JobResponse from(Job job) {
@@ -19,6 +20,7 @@ public record JobResponse(
                 job.getModule().getId(),
                 job.getStatus().name(),
                 job.getCreditUsed(),
+                job.getInputPayload(),
                 job.getCreatedAt()
         );
     }
