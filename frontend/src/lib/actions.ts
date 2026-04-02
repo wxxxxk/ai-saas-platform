@@ -1,5 +1,6 @@
 "use server";
 
+import { refresh } from "next/cache";
 import type { Job } from "@/lib/api";
 import { TEMP_USER_ID } from "@/lib/api";
 
@@ -21,5 +22,11 @@ export async function createJob(moduleId: string): Promise<Job> {
     throw new Error(`Failed to create job: ${res.status} ${text}`);
   }
 
-  return res.json();
+  const job: Job = await res.json();
+
+  // Job 생성 후 클라이언트 라우터에 현재 페이지 재요청 신호를 보낸다.
+  // DashboardPage(Server Component)가 다시 실행되어 Job 목록이 자동 갱신된다.
+  refresh();
+
+  return job;
 }
