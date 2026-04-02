@@ -8,19 +8,14 @@ export type AiModule = {
   updatedAt: string;
 };
 
+// JobResponse와 일치: backend job/dto/JobResponse.java
 export type Job = {
   id: string;
   userId: string;
   moduleId: string;
   status: string;
-  inputPayload: string | null;
-  outputPayload: string | null;
-  errorMessage: string | null;
   creditUsed: number;
-  startedAt: string | null;
-  completedAt: string | null;
   createdAt: string;
-  updatedAt: string;
 };
 
 // TODO: 인증 도입 후 세션에서 읽어오도록 교체

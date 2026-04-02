@@ -1,11 +1,9 @@
 "use server";
 
 import type { Job } from "@/lib/api";
+import { TEMP_USER_ID } from "@/lib/api";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
-
-// TODO: userId는 인증 도입 후 세션에서 가져오도록 교체
-const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 export async function createJob(moduleId: string): Promise<Job> {
   const res = await fetch(`${BACKEND_URL}/api/jobs`, {

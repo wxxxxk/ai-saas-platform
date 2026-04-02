@@ -1,10 +1,11 @@
 package com.wxxk.aisaas.job.controller;
 
-import com.wxxk.aisaas.job.entity.Job;
+import com.wxxk.aisaas.job.dto.CreateJobRequest;
+import com.wxxk.aisaas.job.dto.JobResponse;
 import com.wxxk.aisaas.job.enums.JobStatus;
 import com.wxxk.aisaas.job.service.JobService;
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,27 +26,28 @@ public class JobController {
     private final JobService jobService;
 
     @PostMapping
-    public ResponseEntity<Job> createJob(@RequestBody Map<String, String> body) {
-        UUID userId = UUID.fromString(body.get("userId"));
-        UUID moduleId = UUID.fromString(body.get("moduleId"));
-        String inputPayload = body.get("inputPayload");
-
-        Job job = jobService.createJob(userId, moduleId, inputPayload);
-        return ResponseEntity.status(HttpStatus.CREATED).body(job);
+    public ResponseEntity<JobResponse> createJob(@Valid @RequestBody CreateJobRequest request) {
+        JobResponse response = JobResponse.from(
+                jobService.createJob(request.getUserId(), request.getModuleId(), request.getInputPayload())
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<Job>> getJobs(
+    public ResponseEntity<List<JobResponse>> getJobs(
             @RequestParam UUID userId,
             @RequestParam(required = false) JobStatus status) {
-        if (status != null) {
-            return ResponseEntity.ok(jobService.getJobsByUserIdAndStatus(userId, status));
-        }
-        return ResponseEntity.ok(jobService.getJobsByUserId(userId));
+        List<JobResponse> response = (status != null
+                ? jobService.getJobsByUserIdAndStatus(userId, status)
+                : jobService.getJobsByUserId(userId))
+                .stream()
+                .map(JobResponse::from)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<Job> getJob(@PathVariable UUID jobId) {
-        return ResponseEntity.ok(jobService.getJobById(jobId));
+    public ResponseEntity<JobResponse> getJob(@PathVariable UUID jobId) {
+        return ResponseEntity.ok(JobResponse.from(jobService.getJobById(jobId)));
     }
 }

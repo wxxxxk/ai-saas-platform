@@ -1,6 +1,6 @@
 package com.wxxk.aisaas.module.controller;
 
-import com.wxxk.aisaas.module.entity.AiModule;
+import com.wxxk.aisaas.module.dto.AiModuleResponse;
 import com.wxxk.aisaas.module.service.AiModuleService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,11 @@ public class AiModuleController {
     private final AiModuleService aiModuleService;
 
     @GetMapping
-    public ResponseEntity<List<AiModule>> getActiveModules() {
-        return ResponseEntity.ok(aiModuleService.getActiveModules());
+    public ResponseEntity<List<AiModuleResponse>> getActiveModules() {
+        List<AiModuleResponse> response = aiModuleService.getActiveModules()
+                .stream()
+                .map(AiModuleResponse::from)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 }

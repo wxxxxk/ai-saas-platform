@@ -13,8 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.UUID;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,12 +24,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "jobs")
 public class Job extends BaseEntity {
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
     private AiModule module;
@@ -88,15 +84,5 @@ public class Job extends BaseEntity {
     public void cancel() {
         this.status = JobStatus.CANCELLED;
         this.completedAt = LocalDateTime.now();
-    }
-
-    // @JsonIgnore된 연관 엔티티에서 ID만 노출한다.
-    // Hibernate LAZY 프록시는 실제 로드 없이 ID를 반환하므로 추가 쿼리가 발생하지 않는다.
-    public UUID getUserId() {
-        return user != null ? user.getId() : null;
-    }
-
-    public UUID getModuleId() {
-        return module != null ? module.getId() : null;
     }
 }
