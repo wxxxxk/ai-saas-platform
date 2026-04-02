@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAssets, getJob } from "@/lib/api";
 import type { Asset } from "@/lib/api";
+import AddAssetForm from "@/components/AddAssetForm";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING:   "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
@@ -145,6 +146,7 @@ export default async function JobDetailPage({
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
           Assets
         </h2>
+        <AddAssetForm jobId={jobId} />
         <AssetList assets={assets} />
       </section>
     </div>

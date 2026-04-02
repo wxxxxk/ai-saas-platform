@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import type { Job } from "@/lib/api";
+import type { Asset, Job } from "@/lib/api";
 import { TEMP_USER_ID } from "@/lib/api";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
@@ -29,4 +29,33 @@ export async function createJob(moduleId: string): Promise<Job> {
   refresh();
 
   return job;
+}
+
+export async function createAsset(
+  jobId: string,
+  fileName: string,
+  fileType: string,
+  fileSizeBytes: number
+): Promise<Asset> {
+  const res = await fetch(`${BACKEND_URL}/api/jobs/${jobId}/assets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: TEMP_USER_ID,
+      fileName,
+      fileType,
+      fileSizeBytes,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to create asset: ${res.status} ${text}`);
+  }
+
+  const asset: Asset = await res.json();
+
+  refresh();
+
+  return asset;
 }
