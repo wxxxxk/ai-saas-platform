@@ -8,9 +8,13 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "plans")
 public class Plan extends BaseEntity {
@@ -28,4 +32,12 @@ public class Plan extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal pricePerMonth;
+
+    @Builder
+    private Plan(PlanType planType, String name, Integer monthlyCredits, BigDecimal pricePerMonth) {
+        this.planType = planType;
+        this.name = name;
+        this.monthlyCredits = monthlyCredits;
+        this.pricePerMonth = pricePerMonth;
+    }
 }

@@ -1,6 +1,7 @@
 package com.wxxk.aisaas.credit.entity;
 
 import com.wxxk.aisaas.common.entity.BaseEntity;
+import com.wxxk.aisaas.common.exception.InsufficientCreditException;
 import com.wxxk.aisaas.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,9 +9,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "credit_wallets")
 public class CreditWallet extends BaseEntity {
@@ -29,4 +34,25 @@ public class CreditWallet extends BaseEntity {
     // 누적 사용량 (Job 실행 시 차감 합산)
     @Column(nullable = false)
     private Integer lifetimeUsed;
+
+    @Builder
+    private CreditWallet(User user, Integer balance, Integer lifetimeEarned, Integer lifetimeUsed) {
+        this.user = user;
+        this.balance = balance;
+        this.lifetimeEarned = lifetimeEarned;
+        this.lifetimeUsed = lifetimeUsed;
+    }
+
+    public void charge(int amount) {
+        this.balance += amount;
+        this.lifetimeEarned += amount;
+    }
+
+    public void deduct(int amount) {
+        if (this.balance < amount) {
+            throw new InsufficientCreditException(this.balance, amount);
+        }
+        this.balance -= amount;
+        this.lifetimeUsed += amount;
+    }
 }
