@@ -59,3 +59,36 @@ export async function createAsset(
 
   return asset;
 }
+
+async function postJobTransition(jobId: string, action: string, body?: object): Promise<Job> {
+  const res = await fetch(`${BACKEND_URL}/api/jobs/${jobId}/${action}`, {
+    method: "POST",
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to ${action} job: ${res.status} ${text}`);
+  }
+
+  const job: Job = await res.json();
+  refresh();
+  return job;
+}
+
+export async function startJob(jobId: string): Promise<Job> {
+  return postJobTransition(jobId, "start");
+}
+
+export async function completeJob(jobId: string, outputPayload?: string): Promise<Job> {
+  return postJobTransition(jobId, "complete", { outputPayload: outputPayload ?? null });
+}
+
+export async function failJob(jobId: string, errorMessage?: string): Promise<Job> {
+  return postJobTransition(jobId, "fail", { errorMessage: errorMessage ?? null });
+}
+
+export async function cancelJob(jobId: string): Promise<Job> {
+  return postJobTransition(jobId, "cancel");
+}

@@ -2,6 +2,7 @@ package com.wxxk.aisaas.job.controller;
 
 import com.wxxk.aisaas.job.dto.CreateJobRequest;
 import com.wxxk.aisaas.job.dto.JobResponse;
+import com.wxxk.aisaas.job.dto.UpdateJobStatusRequest;
 import com.wxxk.aisaas.job.enums.JobStatus;
 import com.wxxk.aisaas.job.service.JobService;
 import jakarta.validation.Valid;
@@ -49,5 +50,31 @@ public class JobController {
     @GetMapping("/{jobId}")
     public ResponseEntity<JobResponse> getJob(@PathVariable UUID jobId) {
         return ResponseEntity.ok(JobResponse.from(jobService.getJobById(jobId)));
+    }
+
+    @PostMapping("/{jobId}/start")
+    public ResponseEntity<JobResponse> startJob(@PathVariable UUID jobId) {
+        return ResponseEntity.ok(JobResponse.from(jobService.startJob(jobId)));
+    }
+
+    @PostMapping("/{jobId}/complete")
+    public ResponseEntity<JobResponse> completeJob(
+            @PathVariable UUID jobId,
+            @RequestBody(required = false) UpdateJobStatusRequest request) {
+        String outputPayload = request != null ? request.getOutputPayload() : null;
+        return ResponseEntity.ok(JobResponse.from(jobService.completeJob(jobId, outputPayload)));
+    }
+
+    @PostMapping("/{jobId}/fail")
+    public ResponseEntity<JobResponse> failJob(
+            @PathVariable UUID jobId,
+            @RequestBody(required = false) UpdateJobStatusRequest request) {
+        String errorMessage = request != null ? request.getErrorMessage() : null;
+        return ResponseEntity.ok(JobResponse.from(jobService.failJob(jobId, errorMessage)));
+    }
+
+    @PostMapping("/{jobId}/cancel")
+    public ResponseEntity<JobResponse> cancelJob(@PathVariable UUID jobId) {
+        return ResponseEntity.ok(JobResponse.from(jobService.cancelJob(jobId)));
     }
 }
