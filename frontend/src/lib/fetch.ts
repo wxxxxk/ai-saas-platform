@@ -12,6 +12,7 @@ export async function backendFetch(
 
   return fetch(`${BACKEND_URL}${path}`, {
     ...options,
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string> | undefined),

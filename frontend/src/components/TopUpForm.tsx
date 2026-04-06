@@ -27,19 +27,19 @@ export default function TopUpForm() {
   }
 
   return (
-    <div className="rounded-xl border border-black/[.08] dark:border-white/[.1] bg-white dark:bg-zinc-900 p-5 max-w-sm">
-      <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">크레딧 충전</p>
+    <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] p-5 max-w-sm space-y-3">
+      <p className="text-sm font-medium text-zinc-300">크레딧 충전</p>
 
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-2">
         {PRESETS.map((preset) => (
           <button
             key={preset}
             type="button"
             onClick={() => setAmount(String(preset))}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium tabular-nums border transition-colors ${
               amount === String(preset)
-                ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                : "border-black/[.12] dark:border-white/[.15] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                ? "border-[#9d4edd] bg-[#9d4edd]/20 text-[#e0b6ff]"
+                : "border-white/[.12] text-zinc-400 hover:bg-white/[.06]"
             }`}
           >
             +{preset}
@@ -54,21 +54,27 @@ export default function TopUpForm() {
           onChange={(e) => setAmount(e.target.value)}
           min={1}
           max={10000}
-          className="w-24 rounded-lg border border-black/[.12] dark:border-white/[.15] bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          className="w-24 rounded-lg border border-white/[.12] bg-[#131316] px-3 py-1.5 text-sm tabular-nums text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
         />
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-lg bg-zinc-900 dark:bg-zinc-50 px-4 py-1.5 text-sm font-medium text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 disabled:opacity-50 transition-colors"
+          className="rounded-lg bg-[#9d4edd] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#8b3ecb] disabled:opacity-50 transition-colors"
         >
           {isPending ? "충전 중…" : "충전"}
         </button>
       </form>
 
       {message && (
-        <p className={`mt-2 text-xs ${message.type === "success" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+        <div
+          className={`rounded-lg px-3 py-2 text-xs ${
+            message.type === "success"
+              ? "bg-green-950/30 border border-green-900/50 text-green-400"
+              : "bg-red-950/30 border border-red-900/50 text-red-400"
+          }`}
+        >
           {message.text}
-        </p>
+        </div>
       )}
     </div>
   );

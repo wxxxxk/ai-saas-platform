@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { getSessionUser } from "@/lib/auth";
 import { getCreditBalance } from "@/lib/api";
-import UserNav from "@/components/UserNav";
+import SideNav from "@/components/SideNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,6 +12,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
@@ -38,40 +42,19 @@ export default async function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950">
-        <header className="sticky top-0 z-10 border-b border-black/[.06] dark:border-white/[.07] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm">
-          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <Link
-              href={user ? "/dashboard" : "/"}
-              className="font-semibold text-zinc-900 dark:text-zinc-50 tracking-tight"
-            >
-              AI Studio
-            </Link>
-            <nav className="flex items-center gap-6">
-              {user ? (
-                <UserNav user={user} balance={balance} />
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
-                  >
-                    로그인
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="text-sm font-medium rounded-lg bg-zinc-900 dark:bg-zinc-50 px-3 py-1.5 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
-                  >
-                    회원가입
-                  </Link>
-                </>
-              )}
-            </nav>
+      <body className="min-h-full bg-[#131316] text-[#e4e1e6]">
+        {user ? (
+          <div className="flex min-h-screen">
+            <SideNav user={user} balance={balance} />
+            <main className="flex-1 ml-56 min-h-screen">
+              {children}
+            </main>
           </div>
-        </header>
-        <main className="flex-1">{children}</main>
+        ) : (
+          <main className="min-h-screen">{children}</main>
+        )}
       </body>
     </html>
   );

@@ -42,13 +42,11 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
                 job.getId(), job.getInputPayload());
         try {
             String imageUrl = callDallE(job.getInputPayload());
-            log.info("IMAGE_GENERATION: OpenAI response received jobId={} urlLength={} url={}",
-                    job.getId(), imageUrl.length(), imageUrl);
+            log.info("IMAGE_GENERATION: received URL jobId={} urlLength={}",
+                    job.getId(), imageUrl.length());
 
             job.complete(imageUrl);
 
-            log.info("IMAGE_GENERATION: saving asset jobId={} userId={} storageKeyLength={}",
-                    job.getId(), job.getUser().getId(), imageUrl.length());
             assetService.saveAsset(
                     job.getId(),
                     job.getUser().getId(),
@@ -59,8 +57,7 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
             );
             log.info("IMAGE_GENERATION: asset saved successfully jobId={}", job.getId());
         } catch (Exception e) {
-            log.error("IMAGE_GENERATION failed (caught): jobId={} exceptionType={} error={}",
-                    job.getId(), e.getClass().getSimpleName(), e.getMessage(), e);
+            log.error("IMAGE_GENERATION failed: jobId={} error={}", job.getId(), e.getMessage(), e);
             job.fail(e.getMessage());
         }
     }
@@ -80,13 +77,37 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
                 .body(body)
                 .retrieve()
                 .onStatus(status -> !status.is2xxSuccessful(), (req, res) -> {
-                    String responseBody = StreamUtils.copyToString(res.getBody(), StandardCharsets.UTF_8);
-                    log.error("OpenAI DALL-E API error: status={} body={}", res.getStatusCode(), responseBody);
-                    throw new RuntimeException("DALL-E API error [" + res.getStatusCode() + "]: " + responseBody);
+                    String rawBody = StreamUtils.copyToString(res.getBody(), StandardCharsets.UTF_8);
+                    log.error("OpenAI DALL-E API error: status={} body={}", res.getStatusCode(), rawBody);
+                    throw new RuntimeException(resolveUserMessage(rawBody));
                 })
                 .body(DallEResponse.class);
 
         return response.data().get(0).url();
+    }
+
+    /**
+     * OpenAI 에러 응답 body에서 error code를 string 매칭으로 확인하고
+     * 사용자 친화적 메시지를 반환한다. Jackson 의존 없이 동작한다.
+     */
+    private String resolveUserMessage(String rawBody) {
+        if (rawBody == null) {
+            return "이미지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+        }
+        if (rawBody.contains("content_policy_violation")) {
+            return "프롬프트가 이미지 생성 안전 정책에 의해 거절되었습니다. " +
+                   "실존 인물·노골적 표현·폭력적·민감한 묘사를 피하고 다시 시도해 주세요.";
+        }
+        if (rawBody.contains("billing_hard_limit_reached")) {
+            return "API 사용량 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.";
+        }
+        if (rawBody.contains("rate_limit_exceeded")) {
+            return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
+        }
+        if (rawBody.contains("invalid_api_key")) {
+            return "API 키 설정 오류입니다. 관리자에게 문의하세요.";
+        }
+        return "이미지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
     }
 
     private record DallEResponse(List<ImageData> data) {}
