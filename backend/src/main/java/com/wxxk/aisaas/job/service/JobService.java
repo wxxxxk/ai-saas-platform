@@ -7,6 +7,7 @@ import com.wxxk.aisaas.job.entity.Job;
 import com.wxxk.aisaas.job.enums.JobStatus;
 import com.wxxk.aisaas.job.repository.JobRepository;
 import com.wxxk.aisaas.module.entity.AiModule;
+import com.wxxk.aisaas.module.executor.AiModuleExecutor;
 import com.wxxk.aisaas.module.service.AiModuleService;
 import com.wxxk.aisaas.user.entity.User;
 import com.wxxk.aisaas.user.repository.UserRepository;
@@ -24,6 +25,7 @@ public class JobService {
     private final UserRepository userRepository;
     private final AiModuleService aiModuleService;
     private final CreditWalletService creditWalletService;  // 크레딧 차감 위임
+    private final List<AiModuleExecutor> executors;
 
     @Transactional
     public Job createJob(UUID userId, UUID moduleId, String inputPayload) {
@@ -47,7 +49,14 @@ public class JobService {
                 .creditUsed(module.getCreditCostPerCall())
                 .build();
 
-        return jobRepository.save(job);
+        Job saved = jobRepository.save(job);
+
+        executors.stream()
+                .filter(e -> e.moduleName().equals(module.getName()))
+                .findFirst()
+                .ifPresent(e -> e.execute(saved));
+
+        return saved;
     }
 
     @Transactional
