@@ -9,6 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,11 +36,12 @@ public class AssetController {
     @PostMapping
     public ResponseEntity<AssetResponse> createAsset(
             @PathVariable UUID jobId,
-            @Valid @RequestBody CreateAssetRequest request) {
+            @Valid @RequestBody CreateAssetRequest request, Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
         AssetResponse response = AssetResponse.from(
                 assetService.saveAsset(
                         jobId,
-                        request.getUserId(),
+                        userId,
                         request.getFileName(),
                         request.getFileType(),
                         "pending",

@@ -9,6 +9,7 @@ public record AssetResponse(
         UUID jobId,
         String fileName,
         String fileType,
+        String storageKey,
         long fileSizeBytes,
         LocalDateTime createdAt
 ) {
@@ -18,6 +19,7 @@ public record AssetResponse(
                 asset.getJob().getId(),
                 asset.getFileName(),
                 asset.getFileType(),
+                asset.getStorageKey(),
                 asset.getFileSizeBytes(),
                 asset.getCreatedAt()
         );

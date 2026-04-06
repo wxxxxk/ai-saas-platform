@@ -42,7 +42,7 @@ public class Job extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String outputPayload;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
     // 실제 차감된 크레딧 (module.creditCostPerCall 기준으로 결정)

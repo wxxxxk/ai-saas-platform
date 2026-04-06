@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 public class CreateJobRequest {
 
     @NotNull
-    private UUID userId;
-
-    @NotNull
     private UUID moduleId;
 
     private String inputPayload;

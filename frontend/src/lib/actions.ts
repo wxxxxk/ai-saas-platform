@@ -1,20 +1,85 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
+import { backendFetch } from "@/lib/fetch";
 import type { Asset, Job } from "@/lib/api";
-import { TEMP_USER_ID } from "@/lib/api";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 
-export async function createJob(moduleId: string): Promise<Job> {
-  const res = await fetch(`${BACKEND_URL}/api/jobs`, {
+// ─── 인증 ──────────────────────────────────────────────────────────────────────
+
+export async function loginAction(
+  formData: FormData
+): Promise<{ error: string } | void> {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: TEMP_USER_ID,
-      moduleId,
-      inputPayload: "",
-    }),
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!res.ok) {
+    return { error: "이메일 또는 비밀번호가 올바르지 않습니다." };
+  }
+
+  const data = await res.json();
+  const cookieStore = await cookies();
+  cookieStore.set("auth_token", data.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60,
+  });
+
+  redirect("/dashboard");
+}
+
+export async function registerAction(
+  formData: FormData
+): Promise<{ error: string } | void> {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const name = formData.get("name") as string;
+
+  const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, name }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    return { error: body.error ?? "회원가입에 실패했습니다." };
+  }
+
+  const data = await res.json();
+  const cookieStore = await cookies();
+  cookieStore.set("auth_token", data.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60,
+  });
+
+  redirect("/dashboard");
+}
+
+export async function logoutAction(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete("auth_token");
+  redirect("/login");
+}
+
+// ─── Job ───────────────────────────────────────────────────────────────────────
+
+export async function createJob(moduleId: string, inputPayload?: string): Promise<Job> {
+  const res = await backendFetch("/api/jobs", {
+    method: "POST",
+    body: JSON.stringify({ moduleId, inputPayload: inputPayload ?? "" }),
   });
 
   if (!res.ok) {
@@ -23,11 +88,7 @@ export async function createJob(moduleId: string): Promise<Job> {
   }
 
   const job: Job = await res.json();
-
-  // Job 생성 후 클라이언트 라우터에 현재 페이지 재요청 신호를 보낸다.
-  // DashboardPage(Server Component)가 다시 실행되어 Job 목록이 자동 갱신된다.
   refresh();
-
   return job;
 }
 
@@ -37,15 +98,9 @@ export async function createAsset(
   fileType: string,
   fileSizeBytes: number
 ): Promise<Asset> {
-  const res = await fetch(`${BACKEND_URL}/api/jobs/${jobId}/assets`, {
+  const res = await backendFetch(`/api/jobs/${jobId}/assets`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: TEMP_USER_ID,
-      fileName,
-      fileType,
-      fileSizeBytes,
-    }),
+    body: JSON.stringify({ fileName, fileType, fileSizeBytes }),
   });
 
   if (!res.ok) {
@@ -54,16 +109,13 @@ export async function createAsset(
   }
 
   const asset: Asset = await res.json();
-
   refresh();
-
   return asset;
 }
 
 async function postJobTransition(jobId: string, action: string, body?: object): Promise<Job> {
-  const res = await fetch(`${BACKEND_URL}/api/jobs/${jobId}/${action}`, {
+  const res = await backendFetch(`/api/jobs/${jobId}/${action}`, {
     method: "POST",
-    headers: body ? { "Content-Type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -91,4 +143,19 @@ export async function failJob(jobId: string, errorMessage?: string): Promise<Job
 
 export async function cancelJob(jobId: string): Promise<Job> {
   return postJobTransition(jobId, "cancel");
+}
+
+// ─── 크레딧 ────────────────────────────────────────────────────────────────────
+
+export async function topUpAction(amount: number): Promise<{ error?: string; balance?: number }> {
+  const res = await backendFetch("/api/credits/top-up", {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
+
+  if (!res.ok) return { error: "크레딧 충전에 실패했습니다." };
+
+  const data = await res.json();
+  refresh();
+  return { balance: data.balance };
 }

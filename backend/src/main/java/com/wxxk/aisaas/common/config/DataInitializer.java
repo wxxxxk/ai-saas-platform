@@ -9,6 +9,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,6 +25,7 @@ public class DataInitializer implements ApplicationRunner {
 
     private final AiModuleRepository aiModuleRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -44,7 +46,7 @@ public class DataInitializer implements ApplicationRunner {
                 """,
                 DEV_USER_ID,
                 "dev@example.com",
-                "dev-password-hash",   // TODO: 인증 도입 시 BCrypt 해시로 교체
+                passwordEncoder.encode("devpassword"),  // 로그인: dev@example.com / devpassword
                 "Dev User",
                 "USER",
                 "ACTIVE"

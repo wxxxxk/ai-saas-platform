@@ -1,8 +1,11 @@
+import { backendFetch } from "@/lib/fetch";
+
 export type Asset = {
   id: string;
   jobId: string;
   fileName: string;
   fileType: string;
+  storageKey: string;
   fileSizeBytes: number;
   createdAt: string;
 };
@@ -22,57 +25,42 @@ export type Job = {
   id: string;
   userId: string;
   moduleId: string;
+  moduleName: string;
   status: string;
   creditUsed: number;
   inputPayload: string | null;
+  outputPayload: string | null;
+  errorMessage: string | null;
   createdAt: string;
 };
 
-// TODO: 인증 도입 후 세션에서 읽어오도록 교체
-export const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
-
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
-
 export async function getModules(): Promise<AiModule[]> {
-  const res = await fetch(`${BACKEND_URL}/api/modules`);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch modules: ${res.status}`);
-  }
-
+  const res = await backendFetch("/api/modules");
+  if (!res.ok) throw new Error(`Failed to fetch modules: ${res.status}`);
   return res.json();
 }
 
 export async function getJob(jobId: string): Promise<Job> {
-  const res = await fetch(`${BACKEND_URL}/api/jobs/${encodeURIComponent(jobId)}`);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch job: ${res.status}`);
-  }
-
+  const res = await backendFetch(`/api/jobs/${encodeURIComponent(jobId)}`);
+  if (!res.ok) throw new Error(`Failed to fetch job: ${res.status}`);
   return res.json();
 }
 
 export async function getAssets(jobId: string): Promise<Asset[]> {
-  const res = await fetch(
-    `${BACKEND_URL}/api/jobs/${encodeURIComponent(jobId)}/assets`
-  );
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch assets: ${res.status}`);
-  }
-
+  const res = await backendFetch(`/api/jobs/${encodeURIComponent(jobId)}/assets`);
+  if (!res.ok) throw new Error(`Failed to fetch assets: ${res.status}`);
   return res.json();
 }
 
-export async function getJobs(userId: string): Promise<Job[]> {
-  const res = await fetch(
-    `${BACKEND_URL}/api/jobs?userId=${encodeURIComponent(userId)}`
-  );
+/** 로그인한 사용자의 Job 목록 (userId는 JWT에서 추출됨) */
+export async function getJobs(): Promise<Job[]> {
+  const res = await backendFetch("/api/jobs");
+  if (!res.ok) throw new Error(`Failed to fetch jobs: ${res.status}`);
+  return res.json();
+}
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch jobs: ${res.status}`);
-  }
-
+export async function getCreditBalance(): Promise<{ balance: number; lifetimeEarned: number; lifetimeUsed: number }> {
+  const res = await backendFetch("/api/credits/balance");
+  if (!res.ok) throw new Error(`Failed to fetch balance: ${res.status}`);
   return res.json();
 }

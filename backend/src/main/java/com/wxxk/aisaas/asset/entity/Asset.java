@@ -36,8 +36,8 @@ public class Asset extends BaseEntity {
     @Column(nullable = false)
     private String fileType;
 
-    // 외부 스토리지 객체 키 (S3 key 등)
-    @Column(nullable = false)
+    // 외부 스토리지 객체 키 (S3 key 등) — DALL-E URL처럼 긴 값이 올 수 있으므로 TEXT
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String storageKey;
 
     @Column(nullable = false)
