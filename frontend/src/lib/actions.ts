@@ -78,6 +78,15 @@ export async function logoutAction(): Promise<void> {
 
 // ─── Job ───────────────────────────────────────────────────────────────────────
 
+async function parseErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const body = await res.json();
+    if (body.error) return body.error;
+    if (body.message) return body.message;
+  } catch { /* ignore */ }
+  return `${fallback} (${res.status})`;
+}
+
 export async function createJob(moduleId: string, inputPayload?: string): Promise<Job> {
   const res = await backendFetch("/api/jobs", {
     method: "POST",
@@ -85,8 +94,7 @@ export async function createJob(moduleId: string, inputPayload?: string): Promis
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to create job: ${res.status} ${text}`);
+    throw new Error(await parseErrorMessage(res, "Job 생성에 실패했습니다"));
   }
 
   const job: Job = await res.json();
@@ -106,8 +114,7 @@ export async function createAsset(
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to create asset: ${res.status} ${text}`);
+    throw new Error(await parseErrorMessage(res, "Asset 생성에 실패했습니다"));
   }
 
   const asset: Asset = await res.json();
@@ -122,8 +129,7 @@ async function postJobTransition(jobId: string, action: string, body?: object): 
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to ${action} job: ${res.status} ${text}`);
+    throw new Error(await parseErrorMessage(res, `Job ${action} 처리에 실패했습니다`));
   }
 
   const job: Job = await res.json();

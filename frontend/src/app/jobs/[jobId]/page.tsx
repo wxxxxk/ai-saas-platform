@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getAssets, getJob, JobNotFoundError } from "@/lib/api";
+import { notFound, redirect } from "next/navigation";
+import { getAssets, getJob, JobAuthError, JobNotFoundError } from "@/lib/api";
 import type { Asset, Job } from "@/lib/api";
 import ImagePreview from "@/components/ImagePreview";
 
@@ -117,10 +117,13 @@ export default async function JobDetailPage({
     job = await getJob(jobId);
   } catch (e) {
     if (e instanceof JobNotFoundError) notFound();
+    // 401: 세션 만료 또는 인증 정보 없음 → 쿠키 삭제 후 로그인 페이지로
+    if (e instanceof JobAuthError) redirect("/api/auth/logout");
     throw e;
   }
 
-  const assets = await getAssets(jobId);
+  // assets 실패는 job 자체와 무관하므로 빈 배열로 graceful 처리
+  const assets = await getAssets(jobId).catch(() => []);
 
   const statusCfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.PENDING;
 

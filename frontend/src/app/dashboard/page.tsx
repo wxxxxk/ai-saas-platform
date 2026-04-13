@@ -67,16 +67,21 @@ export default async function DashboardPage() {
   let modules: Awaited<ReturnType<typeof getModules>>;
   let jobs: Awaited<ReturnType<typeof getJobs>>;
 
+  // getMe()는 인증 체크 캐너리: 401이면 세션 문제이므로 logout 처리한다.
+  // getModules() / getJobs() 401은 getMe()와 동일 토큰을 사용하므로
+  // 이론적으로 동시에 실패해야 하지만, 만약 getMe()는 성공하고
+  // 다른 엔드포인트가 실패한다면 그건 백엔드 버그이므로 logout 하지 않는다.
   try {
-    // getMe()를 인증 체크 겸 사용자 정보 로드로 활용한다.
-    // 401이면 토큰이 만료된 것이므로 /api/auth/logout 으로 보내 쿠키를 삭제한 뒤 로그인 페이지로 이동한다.
-    [me, modules, jobs] = await Promise.all([getMe(), getModules(), getJobs()]);
+    me = await getMe();
   } catch (e) {
     if (e instanceof Error && e.message.includes("401")) {
       redirect("/api/auth/logout");
     }
     throw e;
   }
+
+  // 모듈/잡 목록은 세션과 독립적으로 실패를 처리한다.
+  [modules, jobs] = await Promise.all([getModules(), getJobs()]);
 
   const activeModules = modules.filter((m) => m.active);
   const inactiveModules = modules.filter((m) => !m.active);

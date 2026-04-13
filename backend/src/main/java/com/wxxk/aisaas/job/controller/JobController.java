@@ -51,33 +51,40 @@ public class JobController {
     }
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<JobResponse> getJob(@PathVariable UUID jobId) {
-        return ResponseEntity.ok(JobResponse.from(jobService.getJobById(jobId)));
+    public ResponseEntity<JobResponse> getJob(@PathVariable UUID jobId, Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(JobResponse.from(jobService.getJobByIdForUser(jobId, userId)));
     }
 
     @PostMapping("/{jobId}/start")
-    public ResponseEntity<JobResponse> startJob(@PathVariable UUID jobId) {
-        return ResponseEntity.ok(JobResponse.from(jobService.startJob(jobId)));
+    public ResponseEntity<JobResponse> startJob(@PathVariable UUID jobId, Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(JobResponse.from(jobService.startJob(jobId, userId)));
     }
 
     @PostMapping("/{jobId}/complete")
     public ResponseEntity<JobResponse> completeJob(
             @PathVariable UUID jobId,
-            @RequestBody(required = false) UpdateJobStatusRequest request) {
+            @RequestBody(required = false) UpdateJobStatusRequest request,
+            Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
         String outputPayload = request != null ? request.getOutputPayload() : null;
-        return ResponseEntity.ok(JobResponse.from(jobService.completeJob(jobId, outputPayload)));
+        return ResponseEntity.ok(JobResponse.from(jobService.completeJob(jobId, userId, outputPayload)));
     }
 
     @PostMapping("/{jobId}/fail")
     public ResponseEntity<JobResponse> failJob(
             @PathVariable UUID jobId,
-            @RequestBody(required = false) UpdateJobStatusRequest request) {
+            @RequestBody(required = false) UpdateJobStatusRequest request,
+            Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
         String errorMessage = request != null ? request.getErrorMessage() : null;
-        return ResponseEntity.ok(JobResponse.from(jobService.failJob(jobId, errorMessage)));
+        return ResponseEntity.ok(JobResponse.from(jobService.failJob(jobId, userId, errorMessage)));
     }
 
     @PostMapping("/{jobId}/cancel")
-    public ResponseEntity<JobResponse> cancelJob(@PathVariable UUID jobId) {
-        return ResponseEntity.ok(JobResponse.from(jobService.cancelJob(jobId)));
+    public ResponseEntity<JobResponse> cancelJob(@PathVariable UUID jobId, Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(JobResponse.from(jobService.cancelJob(jobId, userId)));
     }
 }

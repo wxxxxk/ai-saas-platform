@@ -3,6 +3,7 @@ package com.wxxk.aisaas.asset.controller;
 import com.wxxk.aisaas.asset.dto.AssetResponse;
 import com.wxxk.aisaas.asset.dto.CreateAssetRequest;
 import com.wxxk.aisaas.asset.service.AssetService;
+import com.wxxk.aisaas.job.service.JobService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -23,9 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AssetController {
 
     private final AssetService assetService;
+    private final JobService jobService;
 
     @GetMapping
-    public ResponseEntity<List<AssetResponse>> getAssetsByJob(@PathVariable UUID jobId) {
+    public ResponseEntity<List<AssetResponse>> getAssetsByJob(
+            @PathVariable UUID jobId, Authentication auth) {
+        UUID userId = UUID.fromString(auth.getName());
+        // 소유권 확인: 본인 job이 아니면 404
+        jobService.getJobByIdForUser(jobId, userId);
         List<AssetResponse> response = assetService.getAssetsByJobId(jobId)
                 .stream()
                 .map(AssetResponse::from)

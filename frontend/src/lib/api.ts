@@ -68,9 +68,21 @@ export class JobNotFoundError extends Error {
   }
 }
 
+/**
+ * 인증 실패(401)와 리소스 부재(404)를 명확히 구분한다.
+ * JobDetailPage에서 401은 logout, 404는 not-found 페이지로 분기하기 위해 사용한다.
+ */
+export class JobAuthError extends Error {
+  constructor(jobId: string) {
+    super(`Job auth failed: ${jobId}`);
+    this.name = "JobAuthError";
+  }
+}
+
 export async function getJob(jobId: string): Promise<Job> {
   const res = await backendFetch(`/api/jobs/${encodeURIComponent(jobId)}`);
   if (res.status === 404) throw new JobNotFoundError(jobId);
+  if (res.status === 401) throw new JobAuthError(jobId);
   if (!res.ok) throw new Error(`Failed to fetch job: ${res.status}`);
   return res.json();
 }

@@ -3,14 +3,23 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = new Set(["/", "/login", "/register"]);
 
-/** JWT payload의 만료 여부만 확인 (서명 검증은 backend에서) */
+/**
+ * JWT payload의 만료 여부만 확인 (서명 검증은 backend에서).
+ *
+ * ⚠️ Buffer.from(str, "base64url")은 Next.js Edge Runtime에서
+ * 신뢰할 수 없다. base64url 고유 문자(-,_)가 포함된 payload를
+ * 잘못 디코딩해 isJwtAlive()가 false를 반환하고 유효한 쿠키를
+ * 삭제하는 간헐적 로그아웃을 유발한다.
+ * atob()은 Web API이므로 Edge Runtime에서 안전하게 사용 가능하다.
+ */
 function isJwtAlive(token: string): boolean {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return false;
-    const payload = JSON.parse(
-      Buffer.from(parts[1], "base64url").toString("utf-8")
-    );
+    // base64url → standard base64 (replace url-safe chars, add padding)
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded));
     if (typeof payload.exp === "number") {
       return payload.exp > Math.floor(Date.now() / 1000);
     }

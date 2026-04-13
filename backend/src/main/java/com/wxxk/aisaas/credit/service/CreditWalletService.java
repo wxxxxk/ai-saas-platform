@@ -33,4 +33,14 @@ public class CreditWalletService {
         CreditWallet wallet = getWalletByUserId(userId);
         wallet.charge(amount);
     }
+
+    /**
+     * Job 실패 시 크레딧 환불.
+     * 차감된 금액을 balance에 복구하고 lifetimeUsed도 되돌린다.
+     */
+    @Transactional
+    public void refund(UUID userId, int amount) {
+        CreditWallet wallet = getWalletByUserId(userId);
+        wallet.refund(amount);
+    }
 }

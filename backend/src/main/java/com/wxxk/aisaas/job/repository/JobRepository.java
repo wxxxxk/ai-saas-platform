@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface JobRepository extends JpaRepository<Job, UUID> {
 
-    List<Job> findAllByUserId(UUID userId);
+    // 최신 job이 먼저 오도록 createdAt DESC 정렬
+    List<Job> findAllByUserIdOrderByCreatedAtDesc(UUID userId);
 
-    List<Job> findAllByUserIdAndStatus(UUID userId, JobStatus status);
+    List<Job> findAllByUserIdAndStatusOrderByCreatedAtDesc(UUID userId, JobStatus status);
 }
