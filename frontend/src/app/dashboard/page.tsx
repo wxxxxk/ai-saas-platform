@@ -1,7 +1,12 @@
+export const dynamic = "force-dynamic";
+
+import { redirect } from "next/navigation";
 import JobList from "@/components/JobList";
 import ModuleCard from "@/components/ModuleCard";
 import TopUpForm from "@/components/TopUpForm";
-import { getJobs, getModules } from "@/lib/api";
+import { getJobs, getMe, getModules, type MeResponse } from "@/lib/api";
+
+// ─── 공통 카드 컴포넌트 ────────────────────────────────────────────────────────
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
@@ -14,8 +19,64 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
+// ─── 사용자 정보 카드 ──────────────────────────────────────────────────────────
+
+function UserCard({ me }: { me: MeResponse }) {
+  return (
+    <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-6 py-5">
+      <div className="flex items-center justify-between gap-4">
+        {/* 아바타 + 이름/이메일 */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-10 w-10 shrink-0 rounded-full bg-[#9d4edd]/20 flex items-center justify-center text-base font-semibold text-[#e0b6ff]">
+            {me.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-zinc-100 truncate">{me.name}</p>
+            <p className="text-xs text-zinc-500 truncate">{me.email}</p>
+          </div>
+        </div>
+
+        {/* 크레딧 잔액 */}
+        <div className="shrink-0 text-right">
+          <p className="text-xs font-medium text-zinc-500">Credit Balance</p>
+          <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-50">
+            {me.creditBalance.toLocaleString()} cr
+          </p>
+        </div>
+      </div>
+
+      {/* 역할 / 플랜 뱃지 */}
+      <div className="mt-3 flex items-center gap-2">
+        <span className="inline-flex items-center rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
+          {me.role}
+        </span>
+        {me.plan && (
+          <span className="inline-flex items-center rounded-full bg-[#9d4edd]/15 px-2.5 py-0.5 text-xs font-medium text-[#e0b6ff]">
+            {me.plan}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── 페이지 ────────────────────────────────────────────────────────────────────
+
 export default async function DashboardPage() {
-  const [modules, jobs] = await Promise.all([getModules(), getJobs()]);
+  let me: Awaited<ReturnType<typeof getMe>>;
+  let modules: Awaited<ReturnType<typeof getModules>>;
+  let jobs: Awaited<ReturnType<typeof getJobs>>;
+
+  try {
+    // getMe()를 인증 체크 겸 사용자 정보 로드로 활용한다.
+    // 401이면 토큰이 만료된 것이므로 /api/auth/logout 으로 보내 쿠키를 삭제한 뒤 로그인 페이지로 이동한다.
+    [me, modules, jobs] = await Promise.all([getMe(), getModules(), getJobs()]);
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("401")) {
+      redirect("/api/auth/logout");
+    }
+    throw e;
+  }
 
   const activeModules = modules.filter((m) => m.active);
   const inactiveModules = modules.filter((m) => !m.active);
@@ -23,7 +84,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
-      {/* Stats overview */}
+
+      {/* 사용자 정보 */}
+      <UserCard me={me} />
+
+      {/* 통계 카드 */}
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="Active Modules" value={activeModules.length} />
         <StatCard label="Total Jobs" value={jobs.length} />

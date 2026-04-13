@@ -2,6 +2,7 @@ package com.wxxk.aisaas.module.executor;
 
 import com.wxxk.aisaas.asset.service.AssetService;
 import com.wxxk.aisaas.job.entity.Job;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -30,6 +31,16 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
 
     private final RestClient restClient = RestClient.create();
 
+    @PostConstruct
+    void logKeyStatus() {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("[IMAGE_GENERATION] openai.api.key is BLANK — OPENAI_API_KEY 환경변수를 확인하세요");
+        } else {
+            String masked = apiKey.substring(0, Math.min(5, apiKey.length())) + "*** (length=" + apiKey.length() + ")";
+            log.info("[IMAGE_GENERATION] openai.api.key loaded: {}", masked);
+        }
+    }
+
     @Override
     public String moduleName() {
         return "IMAGE_GENERATION";
@@ -37,6 +48,11 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
 
     @Override
     public void execute(Job job) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.error("[IMAGE_GENERATION] apiKey is blank at execute time (jobId={}) — 기동 로그에서 key 상태를 확인하세요", job.getId());
+            job.fail("OPENAI_API_KEY가 설정되지 않았습니다. 환경변수를 확인하세요.");
+            return;
+        }
         job.start();
         log.info("IMAGE_GENERATION started: jobId={} prompt=\"{}\"",
                 job.getId(), job.getInputPayload());

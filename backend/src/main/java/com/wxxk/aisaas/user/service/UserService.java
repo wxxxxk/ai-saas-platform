@@ -56,6 +56,16 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User", id));
     }
 
+    /**
+     * plan 정보까지 함께 조회한다 (LEFT JOIN FETCH).
+     * /api/auth/me 등 plan 필드 접근이 필요한 경우 사용한다.
+     */
+    @Transactional(readOnly = true)
+    public User getUserWithPlan(UUID id) {
+        return userRepository.findByIdWithPlan(id)
+                .orElseThrow(() -> new EntityNotFoundException("User", id));
+    }
+
     @Transactional(readOnly = true)
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)

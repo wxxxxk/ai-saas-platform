@@ -31,6 +31,7 @@ export async function loginAction(
   cookieStore.set("auth_token", data.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     path: "/",
     maxAge: 7 * 24 * 60 * 60,
   });
@@ -61,6 +62,7 @@ export async function registerAction(
   cookieStore.set("auth_token", data.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     path: "/",
     maxAge: 7 * 24 * 60 * 60,
   });

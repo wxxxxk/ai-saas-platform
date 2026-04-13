@@ -1,5 +1,15 @@
 import { backendFetch } from "@/lib/fetch";
 
+// /api/auth/me 응답 타입. 백엔드 MeResponse record와 필드명을 맞춘다.
+export type MeResponse = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  plan: string | null; // 플랜 미가입 시 null
+  creditBalance: number;
+};
+
 export type Asset = {
   id: string;
   jobId: string;
@@ -34,14 +44,33 @@ export type Job = {
   createdAt: string;
 };
 
+/**
+ * 현재 로그인한 사용자 정보를 백엔드에서 가져온다.
+ * backendFetch가 자동으로 auth_token 쿠키를 Authorization 헤더로 변환하여 전송한다.
+ * 401이면 토큰이 없거나 만료된 것이므로 호출 측에서 로그아웃 처리가 필요하다.
+ */
+export async function getMe(): Promise<MeResponse> {
+  const res = await backendFetch("/api/auth/me");
+  if (!res.ok) throw new Error(`Failed to fetch me: ${res.status}`);
+  return res.json();
+}
+
 export async function getModules(): Promise<AiModule[]> {
   const res = await backendFetch("/api/modules");
   if (!res.ok) throw new Error(`Failed to fetch modules: ${res.status}`);
   return res.json();
 }
 
+export class JobNotFoundError extends Error {
+  constructor(jobId: string) {
+    super(`Job not found: ${jobId}`);
+    this.name = "JobNotFoundError";
+  }
+}
+
 export async function getJob(jobId: string): Promise<Job> {
   const res = await backendFetch(`/api/jobs/${encodeURIComponent(jobId)}`);
+  if (res.status === 404) throw new JobNotFoundError(jobId);
   if (!res.ok) throw new Error(`Failed to fetch job: ${res.status}`);
   return res.json();
 }

@@ -1,5 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
-import { getAssets, getJob } from "@/lib/api";
+import { notFound } from "next/navigation";
+import { getAssets, getJob, JobNotFoundError } from "@/lib/api";
 import type { Asset, Job } from "@/lib/api";
 import ImagePreview from "@/components/ImagePreview";
 
@@ -108,7 +111,16 @@ export default async function JobDetailPage({
   params: Promise<{ jobId: string }>;
 }) {
   const { jobId } = await params;
-  const [job, assets] = await Promise.all([getJob(jobId), getAssets(jobId)]);
+
+  let job: Job;
+  try {
+    job = await getJob(jobId);
+  } catch (e) {
+    if (e instanceof JobNotFoundError) notFound();
+    throw e;
+  }
+
+  const assets = await getAssets(jobId);
 
   const statusCfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.PENDING;
 

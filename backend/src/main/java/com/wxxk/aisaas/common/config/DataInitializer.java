@@ -1,13 +1,11 @@
 package com.wxxk.aisaas.common.config;
 
-import com.wxxk.aisaas.module.entity.AiModule;
-import com.wxxk.aisaas.module.repository.AiModuleRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -16,29 +14,31 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile("!prod")
+@Order(2)  // AiModuleInitializer(Order=1) 이후에 실행
 public class DataInitializer implements ApplicationRunner {
 
     // BaseEntity.id는 @GeneratedValue(UUID)로 JPA가 자동 생성하며 setter가 없다.
-    // 프론트엔드 TEMP_USER_ID와 일치시키려면 고정 UUID가 필요하므로 JdbcTemplate으로 직접 INSERT한다.
+    // dev 환경에서 재기동 시에도 동일한 사용자로 테스트할 수 있도록 고정 UUID를 사용해 JdbcTemplate으로 직접 INSERT한다.
     static final String DEV_USER_ID   = "00000000-0000-0000-0000-000000000001";
     static final String DEV_WALLET_ID = "00000000-0000-0000-0000-000000000002";
 
-    private final AiModuleRepository aiModuleRepository;
     private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
-        if (aiModuleRepository.count() > 0) {
-            log.info("DataInitializer: data already exists, skipping.");
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE id = ?", Integer.class, DEV_USER_ID);
+        if (count != null && count > 0) {
+            log.info("DataInitializer: dev user already exists, skipping.");
             return;
         }
 
         seedDevUser();
-        seedAiModules();
     }
 
     private void seedDevUser() {
+
         jdbcTemplate.update("""
                 INSERT INTO users
                     (id, email, password_hash, name, role, status, created_at, updated_at)
@@ -67,35 +67,5 @@ public class DataInitializer implements ApplicationRunner {
         log.info("DataInitializer: Dev user inserted (id={}, balance=1000).", DEV_USER_ID);
     }
 
-    private void seedAiModules() {
-        List<AiModule> modules = List.of(
-                AiModule.builder()
-                        .name("TEXT_GENERATION")
-                        .description("주어진 프롬프트를 기반으로 텍스트를 생성합니다.")
-                        .creditCostPerCall(10)
-                        .active(true)
-                        .build(),
-                AiModule.builder()
-                        .name("SUMMARIZATION")
-                        .description("긴 문서나 텍스트를 간결하게 요약합니다.")
-                        .creditCostPerCall(5)
-                        .active(true)
-                        .build(),
-                AiModule.builder()
-                        .name("IMAGE_GENERATION")
-                        .description("텍스트 설명을 기반으로 이미지를 생성합니다.")
-                        .creditCostPerCall(30)
-                        .active(true)
-                        .build(),
-                AiModule.builder()
-                        .name("TRANSLATION")
-                        .description("텍스트를 지정한 언어로 번역합니다.")
-                        .creditCostPerCall(3)
-                        .active(false)
-                        .build()
-        );
 
-        aiModuleRepository.saveAll(modules);
-        log.info("DataInitializer: Inserted {} AiModule records.", modules.size());
-    }
 }

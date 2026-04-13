@@ -2,6 +2,7 @@ package com.wxxk.aisaas.module.executor;
 
 import com.wxxk.aisaas.asset.service.AssetService;
 import com.wxxk.aisaas.job.entity.Job;
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,16 @@ public class OpenAiTextExecutor implements AiModuleExecutor {
 
     private final RestClient restClient = RestClient.create();
 
+    @PostConstruct
+    void logKeyStatus() {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("[TEXT_GENERATION] openai.api.key is BLANK — OPENAI_API_KEY 환경변수를 확인하세요");
+        } else {
+            String masked = apiKey.substring(0, Math.min(5, apiKey.length())) + "*** (length=" + apiKey.length() + ")";
+            log.info("[TEXT_GENERATION] openai.api.key loaded: {}", masked);
+        }
+    }
+
     @Override
     public String moduleName() {
         return "TEXT_GENERATION";
@@ -35,6 +46,11 @@ public class OpenAiTextExecutor implements AiModuleExecutor {
 
     @Override
     public void execute(Job job) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.error("[TEXT_GENERATION] apiKey is blank at execute time (jobId={}) — 기동 로그에서 key 상태를 확인하세요", job.getId());
+            job.fail("OPENAI_API_KEY가 설정되지 않았습니다. 환경변수를 확인하세요.");
+            return;
+        }
         job.start();
         try {
             String generated = callOpenAi(job.getInputPayload());
