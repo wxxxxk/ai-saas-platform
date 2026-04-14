@@ -47,7 +47,7 @@ public class AuthController {
         );
         creditWalletService.charge(user.getId(), WELCOME_CREDITS);
         CreditWallet wallet = creditWalletService.getWalletByUserId(user.getId());
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getName());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getName(), user.getRole().name());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new AuthResponse(token, user.getId(), user.getEmail(), user.getName(), wallet.getBalance()));
     }
@@ -88,13 +88,13 @@ public class AuthController {
         }
 
         boolean passwordMatch = passwordEncoder.matches(request.password(), user.getPasswordHash());
-        log.info("[AuthController] password match={}", passwordMatch);
+        log.debug("[AuthController] password match={}", passwordMatch);
         if (!passwordMatch) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         CreditWallet wallet = creditWalletService.getWalletByUserId(user.getId());
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getName());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getName(), user.getRole().name());
         return ResponseEntity.ok(
                 new AuthResponse(token, user.getId(), user.getEmail(), user.getName(), wallet.getBalance()));
     }

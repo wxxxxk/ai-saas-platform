@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestClient;
@@ -31,7 +32,15 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
     @Value("${openai.api.key}")
     private String apiKey;
 
-    private final RestClient restClient = RestClient.create();
+    // DALL-E 생성 최대 90초, Supabase 업로드 별도 30초 커버
+    private final RestClient restClient = buildRestClient(90_000);
+
+    private static RestClient buildRestClient(int readTimeoutMs) {
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5_000);
+        factory.setReadTimeout(readTimeoutMs);
+        return RestClient.builder().requestFactory(factory).build();
+    }
 
     @PostConstruct
     void logKeyStatus() {

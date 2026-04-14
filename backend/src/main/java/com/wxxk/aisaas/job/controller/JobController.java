@@ -56,9 +56,9 @@ public class JobController {
     @GetMapping("/{jobId}")
     public ResponseEntity<JobResponse> getJob(@PathVariable UUID jobId, Authentication auth) {
         UUID userId = UUID.fromString(auth.getName());
-        log.info("[JobController] getJob — jobId={} requestingUserId={}", jobId, userId);
+        log.debug("[JobController] getJob — jobId={} requestingUserId={}", jobId, userId);
         Job job = jobService.getJobByIdForUser(jobId, userId);
-        log.info("[JobController] getJob — jobOwnerId={} match={}", job.getUser().getId(), job.getUser().getId().equals(userId));
+        log.debug("[JobController] getJob — jobOwnerId={} match={}", job.getUser().getId(), job.getUser().getId().equals(userId));
         return ResponseEntity.ok(JobResponse.from(job));
     }
 

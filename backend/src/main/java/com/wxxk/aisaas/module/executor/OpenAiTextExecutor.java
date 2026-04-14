@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestClient;
@@ -29,7 +30,14 @@ public class OpenAiTextExecutor implements AiModuleExecutor {
     @Value("${openai.api.key}")
     private String apiKey;
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient = buildRestClient(30_000); // 텍스트 생성 최대 30초
+
+    private static RestClient buildRestClient(int readTimeoutMs) {
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5_000);
+        factory.setReadTimeout(readTimeoutMs);
+        return RestClient.builder().requestFactory(factory).build();
+    }
 
     @PostConstruct
     void logKeyStatus() {

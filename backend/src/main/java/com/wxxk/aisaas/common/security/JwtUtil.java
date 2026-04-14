@@ -31,11 +31,12 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(UUID userId, String email, String name) {
+    public String generateToken(UUID userId, String email, String name, String role) {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
                 .claim("name", name)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(getKey())
