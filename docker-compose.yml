@@ -1,20 +1,70 @@
+# AI SaaS Platform — Docker Compose (production 기준)
+#
+# 실행 전 루트의 .env 파일을 생성할 것 (.env.example 참고)
+# docker compose --env-file .env up --build
+
 services:
+
+  # ─── PostgreSQL ─────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: aisaas-postgres
     environment:
       POSTGRES_DB: aisaasdb
-      POSTGRES_USER: aisaas
-      POSTGRES_PASSWORD: aisaas_dev_pw
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aisaas -d aisaasdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d aisaasdb"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    restart: unless-stopped
+
+  # ─── Spring Boot Backend ────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aisaas-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Database (PostgreSQL — Docker 내부 DNS)
+      DB_URL: jdbc:postgresql://postgres:5432/aisaasdb
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      # OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Supabase Storage
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      SUPABASE_BUCKET: ${SUPABASE_BUCKET:-images}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── Next.js Frontend ───────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aisaas-frontend
+    environment:
+      # Server Component에서 backendFetch()가 읽는 값
+      # Docker 내부 DNS: backend 서비스명을 그대로 사용
+      BACKEND_URL: http://backend:8080
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
