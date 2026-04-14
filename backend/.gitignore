@@ -40,4 +40,6 @@ out/
 .env
 .env.*
 !.env.example
- 
+
+### H2 file-based DB (dev only) ###
+data/

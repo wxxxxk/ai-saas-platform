@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import type { Job } from "@/lib/api";
 
 const STATUS_CONFIG: Record<string, { dot: string; badge: string; label: string }> = {
@@ -24,11 +25,17 @@ const MODULE_LABEL: Record<string, string> = {
 };
 
 function formatDate(iso: string) {
+  // hour12를 명시하지 않으면 서버(Node.js 제한 ICU) → "PM",
+  // 클라이언트(브라우저 완전 ICU) → "오후" 로 달라져 hydration mismatch 발생.
+  // hour12: false로 24시간제를 강제하면 AM/PM 표기 자체가 없어 양쪽이 동일.
+  // timeZone 미지정 시 서버(UTC)와 클라이언트(Asia/Seoul) 시각 불일치 가능.
   return new Date(iso).toLocaleString("ko-KR", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul",
   });
 }
 
@@ -63,7 +70,11 @@ export default function JobList({ jobs }: { jobs: Job[] }) {
           {jobs.map((job) => {
             const statusCfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.PENDING;
             return (
-              <tr key={job.id} className="hover:bg-white/[.03] transition-colors">
+              <tr
+                key={job.id}
+                onClick={() => window.location.assign(`/jobs/${job.id}`)}
+                className="hover:bg-white/[.05] transition-colors cursor-pointer"
+              >
                 <td className="px-4 py-3">
                   <span
                     className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -91,12 +102,9 @@ export default function JobList({ jobs }: { jobs: Job[] }) {
                   {formatDate(job.createdAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/jobs/${job.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-100 transition-colors"
-                  >
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-400">
                     View →
-                  </Link>
+                  </span>
                 </td>
               </tr>
             );

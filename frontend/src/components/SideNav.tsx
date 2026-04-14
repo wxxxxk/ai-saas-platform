@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useTransition, useState } from "react";
 import { logoutAction } from "@/lib/actions";
 import type { SessionUser } from "@/lib/auth";
 
@@ -10,15 +10,22 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
-export default function SideNav({
-  user,
-  balance,
-}: {
-  user: SessionUser;
-  balance: number;
-}) {
+export default function SideNav({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [balance, setBalance] = useState<number | null>(null);
+
+  // balance를 마운트 시 1회만 fetch한다.
+  // pathname 의존성을 제거해 job detail 진입 직후 불필요한 재요청/재렌더를 방지한다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetch("/api/balance")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && typeof data.balance === "number") setBalance(data.balance);
+      })
+      .catch(() => {});
+  }, []); // mount 1회
 
   function handleLogout() {
     startTransition(async () => {
@@ -44,6 +51,7 @@ export default function SideNav({
             <Link
               key={href}
               href={href}
+              prefetch={false}
               className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-[#9d4edd]/15 text-[#e0b6ff]"
@@ -64,7 +72,9 @@ export default function SideNav({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-zinc-200 truncate">{user.name}</p>
-            <p className="text-xs text-zinc-500 tabular-nums">{balance} cr</p>
+            <p className="text-xs text-zinc-500 tabular-nums">
+              {balance !== null ? `${balance} cr` : "…"}
+            </p>
           </div>
         </div>
         <button

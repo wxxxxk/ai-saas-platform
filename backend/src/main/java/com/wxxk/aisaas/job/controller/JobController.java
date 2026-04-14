@@ -3,12 +3,14 @@ package com.wxxk.aisaas.job.controller;
 import com.wxxk.aisaas.job.dto.CreateJobRequest;
 import com.wxxk.aisaas.job.dto.JobResponse;
 import com.wxxk.aisaas.job.dto.UpdateJobStatusRequest;
+import com.wxxk.aisaas.job.entity.Job;
 import com.wxxk.aisaas.job.enums.JobStatus;
 import com.wxxk.aisaas.job.service.JobService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
@@ -53,7 +56,10 @@ public class JobController {
     @GetMapping("/{jobId}")
     public ResponseEntity<JobResponse> getJob(@PathVariable UUID jobId, Authentication auth) {
         UUID userId = UUID.fromString(auth.getName());
-        return ResponseEntity.ok(JobResponse.from(jobService.getJobByIdForUser(jobId, userId)));
+        log.info("[JobController] getJob — jobId={} requestingUserId={}", jobId, userId);
+        Job job = jobService.getJobByIdForUser(jobId, userId);
+        log.info("[JobController] getJob — jobOwnerId={} match={}", job.getUser().getId(), job.getUser().getId().equals(userId));
+        return ResponseEntity.ok(JobResponse.from(job));
     }
 
     @PostMapping("/{jobId}/start")

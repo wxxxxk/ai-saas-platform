@@ -2,7 +2,6 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { refresh } from "next/cache";
 import { backendFetch } from "@/lib/fetch";
 import type { Asset, Job } from "@/lib/api";
 
@@ -87,7 +86,18 @@ async function parseErrorMessage(res: Response, fallback: string): Promise<strin
   return `${fallback} (${res.status})`;
 }
 
-export async function createJob(moduleId: string, inputPayload?: string): Promise<Job> {
+/**
+ * Job을 생성하고 jobId를 반환한다.
+ *
+ * Server Action 내부에서 redirect()를 호출하면 클라이언트가
+ * navigation과 router.refresh()를 동시에 실행한다.
+ * router.refresh()가 /dashboard RSC를 재요청하면서 navigation과 경합해
+ * dashboard로 되돌아오는 현상이 발생한다.
+ *
+ * 대신 jobId를 반환하고 클라이언트에서 window.location.assign()으로
+ * hard navigation을 수행해 router cache 경합을 완전히 우회한다.
+ */
+export async function createJob(moduleId: string, inputPayload?: string): Promise<string> {
   const res = await backendFetch("/api/jobs", {
     method: "POST",
     body: JSON.stringify({ moduleId, inputPayload: inputPayload ?? "" }),
@@ -98,8 +108,7 @@ export async function createJob(moduleId: string, inputPayload?: string): Promis
   }
 
   const job: Job = await res.json();
-  refresh();
-  return job;
+  return job.id;
 }
 
 export async function createAsset(
@@ -117,9 +126,7 @@ export async function createAsset(
     throw new Error(await parseErrorMessage(res, "Asset 생성에 실패했습니다"));
   }
 
-  const asset: Asset = await res.json();
-  refresh();
-  return asset;
+  return res.json();
 }
 
 async function postJobTransition(jobId: string, action: string, body?: object): Promise<Job> {
@@ -132,9 +139,7 @@ async function postJobTransition(jobId: string, action: string, body?: object): 
     throw new Error(await parseErrorMessage(res, `Job ${action} 처리에 실패했습니다`));
   }
 
-  const job: Job = await res.json();
-  refresh();
-  return job;
+  return res.json();
 }
 
 export async function startJob(jobId: string): Promise<Job> {
@@ -164,6 +169,5 @@ export async function topUpAction(amount: number): Promise<{ error?: string; bal
   if (!res.ok) return { error: "크레딧 충전에 실패했습니다." };
 
   const data = await res.json();
-  refresh();
   return { balance: data.balance };
 }

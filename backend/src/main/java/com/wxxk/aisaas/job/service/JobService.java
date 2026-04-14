@@ -135,7 +135,10 @@ public class JobService {
 
     @Transactional(readOnly = true)
     public Job getJobById(UUID jobId) {
-        return jobRepository.findById(jobId)
+        // findByIdWithJoins: JOIN FETCH로 user·module을 트랜잭션 안에서 로드한다.
+        // 기본 findById()는 LAZY 프록시를 반환하므로 @Transactional 밖에서
+        // job.getModule().getName() 접근 시 LazyInitializationException이 발생한다.
+        return jobRepository.findByIdWithJoins(jobId)
                 .orElseThrow(() -> new EntityNotFoundException("Job", jobId));
     }
 

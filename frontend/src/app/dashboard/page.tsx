@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import JobList from "@/components/JobList";
 import ModuleCard from "@/components/ModuleCard";
 import TopUpForm from "@/components/TopUpForm";
-import { getJobs, getMe, getModules, type MeResponse } from "@/lib/api";
+import { AuthError, getJobs, getMe, getModules, type AiModule, type Job, type MeResponse } from "@/lib/api";
 
 // ─── 공통 카드 컴포넌트 ────────────────────────────────────────────────────────
 
@@ -63,25 +63,34 @@ function UserCard({ me }: { me: MeResponse }) {
 // ─── 페이지 ────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  let me: Awaited<ReturnType<typeof getMe>>;
-  let modules: Awaited<ReturnType<typeof getModules>>;
-  let jobs: Awaited<ReturnType<typeof getJobs>>;
+  let me: MeResponse;
+  let modules: AiModule[] = [];
+  let jobs: Job[] = [];
 
-  // getMe()는 인증 체크 캐너리: 401이면 세션 문제이므로 logout 처리한다.
-  // getModules() / getJobs() 401은 getMe()와 동일 토큰을 사용하므로
-  // 이론적으로 동시에 실패해야 하지만, 만약 getMe()는 성공하고
-  // 다른 엔드포인트가 실패한다면 그건 백엔드 버그이므로 logout 하지 않는다.
+  // getMe() 실패는 세션 문제이므로 항상 logout 처리한다.
+  // - AuthError(401): 토큰 없음/만료
+  // - AuthError(404): DB에 사용자 없음 (H2 재부팅 후 stale 쿠키)
+  // - 그 외 에러: 백엔드/네트워크 장애 → error boundary로 전파
   try {
     me = await getMe();
   } catch (e) {
-    if (e instanceof Error && e.message.includes("401")) {
-      redirect("/api/auth/logout");
-    }
+    if (e instanceof AuthError) redirect("/login");
     throw e;
   }
 
-  // 모듈/잡 목록은 세션과 독립적으로 실패를 처리한다.
-  [modules, jobs] = await Promise.all([getModules(), getJobs()]);
+  // Promise.all을 사용하지 않는다.
+  // Next.js 15 Server Components에서 cookies()를 Promise.all 내부의 동시 async 호출로
+  // 실행하면, 두 번째 이후 cookies() 호출이 빈 스토어를 반환하는 경합이 발생한다.
+  // 이 경우 Authorization 헤더가 누락되어 401이 발생한다.
+  // 순차 실행은 각 cookies() 호출이 독립적으로 request context를 읽도록 보장한다.
+  modules = await getModules().catch((e) => {
+    console.error("[Dashboard] getModules failed:", e);
+    return [];
+  });
+  jobs = await getJobs().catch((e) => {
+    console.error("[Dashboard] getJobs failed:", e);
+    return [];
+  });
 
   const activeModules = modules.filter((m) => m.active);
   const inactiveModules = modules.filter((m) => !m.active);

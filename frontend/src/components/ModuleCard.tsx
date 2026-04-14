@@ -1,7 +1,6 @@
 "use client";
 
-import { useTransition, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createJob } from "@/lib/actions";
 import type { AiModule } from "@/lib/api";
 
@@ -49,26 +48,29 @@ function getModuleMeta(name: string) {
 }
 
 export default function ModuleCard({ module }: { module: AiModule }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const needsPrompt = PROMPT_MODULES.has(module.name);
   const meta = getModuleMeta(module.name);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setIsPending(true);
 
-    startTransition(async () => {
-      try {
-        const job = await createJob(module.id, needsPrompt ? prompt : undefined);
-        router.push(`/jobs/${job.id}`);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      }
-    });
+    try {
+      // createJob은 jobId를 반환한다 (redirect 미사용).
+      // startTransition + Server Action redirect() 조합은 post-action router.refresh()가
+      // /dashboard RSC를 재요청하면서 navigation과 경합해 dashboard로 되돌아오는 문제가 있다.
+      // window.location.assign()으로 hard navigation하면 router cache를 완전히 우회한다.
+      const jobId = await createJob(module.id, needsPrompt ? prompt : undefined);
+      window.location.assign(`/jobs/${jobId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+      setIsPending(false);
+    }
   }
 
   return (
@@ -142,6 +144,12 @@ export default function ModuleCard({ module }: { module: AiModule }) {
                 ? "Generate"
                 : "Run"}
         </button>
+
+        {isPending && (
+          <p className="text-xs text-zinc-500 text-center animate-pulse">
+            AI가 응답을 생성하고 있습니다. 잠시만 기다려주세요…
+          </p>
+        )}
       </form>
 
       {error && (

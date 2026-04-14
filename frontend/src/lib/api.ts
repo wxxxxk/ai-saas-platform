@@ -45,12 +45,27 @@ export type Job = {
 };
 
 /**
+ * 인증 실패를 나타내는 타입 에러.
+ * - 401: JWT 없음 / 만료 / 서명 불일치
+ * - 404: JWT는 유효하지만 DB에 사용자가 없음 (H2 재부팅 후 stale 쿠키)
+ * 호출 측에서 이 에러를 받으면 로그아웃 처리한다.
+ */
+export class AuthError extends Error {
+  constructor(public readonly status: number) {
+    super(`Auth failed: ${status}`);
+    this.name = "AuthError";
+  }
+}
+
+/**
  * 현재 로그인한 사용자 정보를 백엔드에서 가져온다.
- * backendFetch가 자동으로 auth_token 쿠키를 Authorization 헤더로 변환하여 전송한다.
- * 401이면 토큰이 없거나 만료된 것이므로 호출 측에서 로그아웃 처리가 필요하다.
+ * - 401: 토큰 없음/만료 → AuthError
+ * - 404: DB에 사용자 없음(stale 쿠키) → AuthError
+ * - 기타 에러: 일반 Error (재throw해서 error boundary로)
  */
 export async function getMe(): Promise<MeResponse> {
   const res = await backendFetch("/api/auth/me");
+  if (res.status === 401 || res.status === 404) throw new AuthError(res.status);
   if (!res.ok) throw new Error(`Failed to fetch me: ${res.status}`);
   return res.json();
 }

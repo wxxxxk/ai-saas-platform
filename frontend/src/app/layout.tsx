@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { getSessionUser } from "@/lib/auth";
-import { getCreditBalance } from "@/lib/api";
 import SideNav from "@/components/SideNav";
 import "./globals.css";
 
@@ -29,15 +28,6 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await getSessionUser();
-  let balance = 0;
-  if (user) {
-    try {
-      const wallet = await getCreditBalance();
-      balance = wallet.balance;
-    } catch {
-      /* 미인증 페이지에서는 balance 조회 실패 가능 */
-    }
-  }
 
   return (
     <html
@@ -47,7 +37,7 @@ export default async function RootLayout({
       <body className="min-h-full bg-[#131316] text-[#e4e1e6]">
         {user ? (
           <div className="flex min-h-screen">
-            <SideNav user={user} balance={balance} />
+            <SideNav user={user} />
             <main className="flex-1 ml-56 min-h-screen">
               {children}
             </main>

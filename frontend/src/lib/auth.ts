@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { getCookieStore } from "@/lib/fetch";
 
 export type SessionUser = {
   id: string;
@@ -7,11 +7,11 @@ export type SessionUser = {
 };
 
 export async function getAuthToken(): Promise<string | null> {
-  const cookieStore = await cookies();
+  const cookieStore = await getCookieStore();
   return cookieStore.get("auth_token")?.value ?? null;
 }
 
-/** JWT payload를 클라이언트에서 디코딩 (서명 검증은 백엔드에서 처리) */
+/** JWT payload를 서버에서 디코딩 (서명 검증은 백엔드에서 처리) */
 export async function getSessionUser(): Promise<SessionUser | null> {
   const token = await getAuthToken();
   if (!token) return null;

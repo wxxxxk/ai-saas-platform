@@ -54,15 +54,25 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
             return;
         }
         job.start();
-        log.info("IMAGE_GENERATION started: jobId={} prompt=\"{}\"",
-                job.getId(), job.getInputPayload());
+        log.info("[IMAGE_GENERATION] started: jobId={} prompt=\"{}\"", job.getId(), job.getInputPayload());
+
+        // 1단계: DALL-E 호출 — 실패하면 job.fail() 후 즉시 종료
+        String imageUrl;
         try {
-            String imageUrl = callDallE(job.getInputPayload());
-            log.info("IMAGE_GENERATION: received URL jobId={} urlLength={}",
-                    job.getId(), imageUrl.length());
+            imageUrl = callDallE(job.getInputPayload());
+            log.info("[IMAGE_GENERATION] received URL: jobId={} urlLength={}", job.getId(), imageUrl.length());
+        } catch (Exception e) {
+            log.error("[IMAGE_GENERATION] failed: jobId={} error={}", job.getId(), e.getMessage(), e);
+            job.fail(e.getMessage());
+            return;
+        }
 
-            job.complete(imageUrl);
+        // 2단계: OpenAI 성공 → outputPayload에 imageUrl 저장, COMPLETED 확정
+        // outputPayload에 URL을 저장해 두므로 asset 저장 실패와 무관하게 이미지 표시 가능
+        job.complete(imageUrl);
 
+        // 3단계: Asset 저장 — 실패해도 job은 COMPLETED 유지 (outputPayload에 URL이 있으므로)
+        try {
             assetService.saveAsset(
                     job.getId(),
                     job.getUser().getId(),
@@ -71,10 +81,9 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
                     imageUrl,
                     0L
             );
-            log.info("IMAGE_GENERATION: asset saved successfully jobId={}", job.getId());
+            log.info("[IMAGE_GENERATION] asset saved successfully: jobId={}", job.getId());
         } catch (Exception e) {
-            log.error("IMAGE_GENERATION failed: jobId={} error={}", job.getId(), e.getMessage(), e);
-            job.fail(e.getMessage());
+            log.warn("[IMAGE_GENERATION] asset save failed for job {} (job stays COMPLETED): {}", job.getId(), e.getMessage());
         }
     }
 
