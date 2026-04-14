@@ -77,14 +77,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        log.info("[AuthController] login attempt — email={}", request.email());
         User user;
         try {
             user = userService.getUserByEmail(request.email());
+            log.info("[AuthController] user found — userId={}", user.getId());
         } catch (EntityNotFoundException e) {
+            log.warn("[AuthController] user not found — email={}", request.email());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        boolean passwordMatch = passwordEncoder.matches(request.password(), user.getPasswordHash());
+        log.info("[AuthController] password match={}", passwordMatch);
+        if (!passwordMatch) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
