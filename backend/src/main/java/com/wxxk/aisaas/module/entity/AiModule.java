@@ -37,4 +37,8 @@ public class AiModule extends BaseEntity {
         this.creditCostPerCall = creditCostPerCall;
         this.active = active;
     }
+
+    public void updateActive(boolean active) {
+        this.active = active;
+    }
 }
