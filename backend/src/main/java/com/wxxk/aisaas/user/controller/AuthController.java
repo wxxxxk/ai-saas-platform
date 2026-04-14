@@ -13,6 +13,7 @@ import com.wxxk.aisaas.user.service.UserService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -37,6 +39,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("[AuthController] register reached — email={}", request.email());
         User user = userService.register(
                 request.email(),
                 passwordEncoder.encode(request.password()),
