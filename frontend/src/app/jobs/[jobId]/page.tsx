@@ -7,15 +7,17 @@ import { getJob, JobAuthError, JobNotFoundError } from "@/lib/api";
 import type { Job } from "@/lib/api";
 import CopyButton from "@/components/CopyButton";
 import ImagePreview from "@/components/ImagePreview";
+import RegenerateButton from "@/components/RegenerateButton";
+import DownloadButton from "@/components/DownloadButton";
 
 // ─── 상태별 스타일 ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<string, { dot: string; badge: string; label: string }> = {
-  PENDING:   { dot: "bg-zinc-500",  badge: "bg-zinc-800 text-zinc-400",                         label: "PENDING"   },
-  RUNNING:   { dot: "bg-blue-400 animate-pulse", badge: "bg-blue-900/40 text-blue-400",         label: "RUNNING"   },
-  COMPLETED: { dot: "bg-green-500", badge: "bg-green-900/40 text-green-400",                    label: "COMPLETED" },
-  FAILED:    { dot: "bg-red-500",   badge: "bg-red-900/40 text-red-400",                        label: "FAILED"    },
-  CANCELLED: { dot: "bg-zinc-500",  badge: "bg-zinc-800 text-zinc-500",                         label: "CANCELLED" },
+  PENDING:   { dot: "bg-zinc-500",  badge: "bg-zinc-800 text-zinc-400",                         label: "대기 중"  },
+  RUNNING:   { dot: "bg-blue-400 animate-pulse", badge: "bg-blue-900/40 text-blue-400",         label: "생성 중"  },
+  COMPLETED: { dot: "bg-green-500", badge: "bg-green-900/40 text-green-400",                    label: "완료"     },
+  FAILED:    { dot: "bg-red-500",   badge: "bg-red-900/40 text-red-400",                        label: "실패"     },
+  CANCELLED: { dot: "bg-zinc-500",  badge: "bg-zinc-800 text-zinc-500",                         label: "취소됨"   },
 };
 
 const MODULE_STYLE: Record<string, { badge: string; label: string }> = {
@@ -69,11 +71,11 @@ export default async function JobDetailPage({
 
       {/* 뒤로 가기 */}
       <Link
-        href="/dashboard"
+        href="/jobs"
         prefetch={false}
         className="inline-flex items-center text-sm text-zinc-500 hover:text-zinc-200 transition-colors"
       >
-        ← Dashboard
+        ← 히스토리
       </Link>
 
       {/* 헤더 */}
@@ -121,16 +123,35 @@ export default async function JobDetailPage({
               <p className="text-sm text-zinc-200 whitespace-pre-wrap leading-relaxed">{job.outputPayload}</p>
             </div>
           )}
+
+          {/* 액션 버튼 */}
+          <div className="flex items-center gap-2 pt-1">
+            {isImage && <DownloadButton url={job.outputPayload} />}
+            {job.inputPayload && (
+              <RegenerateButton
+                moduleId={job.moduleId}
+                prompt={job.inputPayload}
+                creditCost={job.creditUsed}
+              />
+            )}
+          </div>
         </section>
       )}
 
       {/* 에러 카드 (FAILED) */}
       {isFailed && (
-        <section className="rounded-xl border border-red-900/40 bg-red-950/20 p-5 space-y-2">
+        <section className="rounded-xl border border-red-900/40 bg-red-950/20 p-5 space-y-3">
           <p className="text-xs font-medium text-red-500 uppercase tracking-wider">Error</p>
           <p className="text-sm text-red-400 leading-relaxed">
             {job.errorMessage ?? "알 수 없는 오류가 발생했습니다."}
           </p>
+          {job.inputPayload && (
+            <RegenerateButton
+              moduleId={job.moduleId}
+              prompt={job.inputPayload}
+              creditCost={job.creditUsed}
+            />
+          )}
         </section>
       )}
 
@@ -149,8 +170,8 @@ export default async function JobDetailPage({
 function ErrorPage({ message }: { message: string }) {
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-6">
-      <Link href="/dashboard" prefetch={false} className="text-sm text-zinc-500 hover:text-zinc-200 transition-colors">
-        ← Dashboard
+      <Link href="/jobs" prefetch={false} className="text-sm text-zinc-500 hover:text-zinc-200 transition-colors">
+        ← 히스토리
       </Link>
       <p className="text-sm text-zinc-400">{message}</p>
     </div>

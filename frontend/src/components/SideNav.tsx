@@ -8,6 +8,7 @@ import type { SessionUser } from "@/lib/auth";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/jobs",      label: "히스토리"   },
 ];
 
 export default function SideNav({ user }: { user: SessionUser }) {
