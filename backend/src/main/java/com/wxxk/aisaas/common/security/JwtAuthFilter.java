@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -39,7 +40,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 var claims = jwtUtil.parseToken(token);
                 String role = claims.get("role", String.class);
-                var authorities = role != null
+                List<GrantedAuthority> authorities = role != null
                         ? List.of(new SimpleGrantedAuthority(role))
                         : Collections.emptyList();
                 var auth = new UsernamePasswordAuthenticationToken(
