@@ -3,12 +3,13 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCookieStore } from "@/lib/fetch";
-import { getJob, JobAuthError, JobNotFoundError } from "@/lib/api";
+import { getJob, getJobs, JobAuthError, JobNotFoundError } from "@/lib/api";
 import type { Job } from "@/lib/api";
 import CopyButton from "@/components/CopyButton";
 import ImagePreview from "@/components/ImagePreview";
 import DownloadButton from "@/components/DownloadButton";
 import EditPromptForm from "@/components/EditPromptForm";
+import RelatedResults from "@/components/RelatedResults";
 
 // ─── 스타일 설정 ────────────────────────────────────────────────────────────────
 
@@ -251,9 +252,11 @@ function SidebarActions({
 function SidebarContinue({
   job,
   label,
+  relatedCount = 0,
 }: {
   job: Job;
   label: string;
+  relatedCount?: number;
 }) {
   if (!job.inputPayload) return null;
 
@@ -264,6 +267,13 @@ function SidebarContinue({
         initialPrompt={job.inputPayload}
         creditCost={job.creditUsed}
       />
+      {relatedCount > 0 && (
+        <p className="mt-3 text-[11px] leading-relaxed text-zinc-600 border-t border-white/[.05] pt-3">
+          이 프롬프트로 만든 결과가{" "}
+          <span className="font-semibold text-zinc-500">{relatedCount}개</span> 더 있습니다.{" "}
+          <span className="text-zinc-600">페이지 아래에서 비교해 보세요 ↓</span>
+        </p>
+      )}
     </SidebarSection>
   );
 }
@@ -324,6 +334,32 @@ export default async function JobDetailPage({
 
   if (authError || !job) {
     return <AuthErrorPage />;
+  }
+
+  // ─── 관련 결과 조회 ───────────────────────────────────────────────────────────
+  // cookies() 동시 호출 경합 방지를 위해 getJob() 이후 순차 실행한다.
+  // 같은 moduleName + inputPayload를 가진 다른 Job들을 "변형(variation)"으로 취급한다.
+  // inputPayload가 null이면 그룹화 의미가 없으므로 건너뛴다.
+
+  let relatedJobs: Job[] = [];
+  if (job.inputPayload) {
+    try {
+      const allJobs = await getJobs();
+      relatedJobs = allJobs
+        .filter(
+          (j) =>
+            j.id !== jobId &&
+            j.moduleName === job.moduleName &&
+            j.inputPayload === job.inputPayload
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        .slice(0, 9); // 현재 + 최대 9개 = 10개까지 표시
+    } catch {
+      // 관련 결과 조회 실패는 비치명적 — 기본값 빈 배열 유지
+    }
   }
 
   // ─── 파생 상태 ──────────────────────────────────────────────────────────────
@@ -481,10 +517,18 @@ export default async function JobDetailPage({
 
           {/* 계속 작업하기 / 다시 시도 */}
           {isCompleted && hasPrompt && (
-            <SidebarContinue job={job} label="계속 작업하기" />
+            <SidebarContinue
+              job={job}
+              label="계속 작업하기"
+              relatedCount={relatedJobs.length}
+            />
           )}
           {isFailed && hasPrompt && (
-            <SidebarContinue job={job} label="다시 시도" />
+            <SidebarContinue
+              job={job}
+              label="다시 시도"
+              relatedCount={relatedJobs.length}
+            />
           )}
 
           {/* 상세 정보 */}
@@ -514,6 +558,12 @@ export default async function JobDetailPage({
 
         </aside>
       </div>
+
+      {/* ─── 관련 결과 비교 섹션 ─────────────────────────────────────────────── */}
+      {relatedJobs.length > 0 && (
+        <RelatedResults currentJob={job} relatedJobs={relatedJobs} />
+      )}
+
     </div>
   );
 }
