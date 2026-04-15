@@ -1,81 +1,293 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getSessionUser } from "@/lib/auth";
+import HomeNav from "@/components/HomeNav";
 
-const FEATURES = [
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const STEPS = [
   {
-    name: "Text Generation",
-    desc: "GPT-4o-mini로 프롬프트 기반 텍스트를 즉시 생성합니다",
-    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-    dotClass: "bg-emerald-400",
+    n: "01",
+    title: "프롬프트를 입력하세요",
+    body: "텍스트 생성 또는 이미지 생성 모듈을 선택하고 아이디어를 입력합니다. AI가 즉시 결과를 생성합니다.",
   },
   {
-    name: "Image Generation",
-    desc: "DALL-E 3로 프롬프트 기반 이미지를 생성합니다",
-    badgeClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-    dotClass: "bg-purple-400",
+    n: "02",
+    title: "다시 생성하고 비교하세요",
+    body: "결과가 마음에 들지 않으면 다시 생성하세요. 같은 프롬프트로 만든 변형들이 하나의 그룹으로 묶여 나란히 비교할 수 있습니다.",
+  },
+  {
+    n: "03",
+    title: "최선의 결과를 남기세요",
+    body: "별표로 가장 좋은 결과를 표시해두면 히스토리에 영구 보관됩니다. 언제든 다시 꺼내 이어 작업할 수 있습니다.",
   },
 ] as const;
 
-export default function Home() {
+const FEATURES = [
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: "변형 자동 그룹화",
+    body: "같은 프롬프트로 만든 결과들이 하나의 아이디어 그룹으로 묶입니다. 작업이 흩어지지 않습니다.",
+  },
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    title: "영구 히스토리",
+    body: "모든 생성 기록이 저장됩니다. 며칠 전 작업도 프롬프트 그대로 다시 꺼내 이어갈 수 있습니다.",
+  },
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15M3 9h18M3 15h18" />
+      </svg>
+    ),
+    title: "나란히 비교",
+    body: "텍스트는 Split View로, 이미지는 갤러리로. 차이를 직접 눈으로 확인하며 최선을 고르세요.",
+  },
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+      </svg>
+    ),
+    title: "결과 선택 & 저장",
+    body: "별표로 최선의 버전을 표시해두세요. 다음 방문에도 어떤 결과를 선택했는지 바로 확인됩니다.",
+  },
+] as const;
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default async function HomePage() {
+  // Logged-in users go straight to their workspace.
+  const user = await getSessionUser();
+  if (user) redirect("/dashboard");
+
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-6">
-      {/* Subtle background glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-zinc-200/50 dark:bg-zinc-800/30 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-[#131316] text-[#e4e1e6] overflow-x-hidden">
+      <HomeNav />
 
-      <div className="max-w-xl w-full text-center space-y-6">
-        {/* Status pill */}
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-black/[.08] dark:border-white/[.1] bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          Prototype · MVP
-        </div>
+      {/* Ambient glow — purely decorative, sits below all content */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 h-[480px] bg-gradient-to-b from-[#9d4edd]/[.07] via-[#9d4edd]/[.02] to-transparent"
+      />
 
-        {/* Hero */}
-        <h1 className="text-5xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">
-          AI Studio
-        </h1>
-        <p className="text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
-          텍스트와 이미지를 AI로 생성하는<br />크레딧 기반 플랫폼
-        </p>
+      <main className="relative">
 
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/dashboard"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg bg-zinc-900 dark:bg-zinc-50 px-6 py-2.5 text-sm font-medium text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
-          >
-            Dashboard 열기 →
-          </Link>
-          <Link
-            href="/register"
-            className="w-full sm:w-auto flex items-center justify-center rounded-lg border border-black/[.1] dark:border-white/[.12] px-6 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors"
-          >
-            무료로 시작하기
-          </Link>
-        </div>
+        {/* ── HERO ──────────────────────────────────────────────────────────── */}
+        <section className="pt-36 pb-28 px-6">
+          <div className="max-w-3xl mx-auto text-center space-y-8">
 
-        {/* Feature cards */}
-        <div className="pt-6 grid grid-cols-2 gap-3 text-left">
-          {FEATURES.map((f) => (
-            <div
-              key={f.name}
-              className="rounded-xl border border-black/[.07] dark:border-white/[.08] bg-white dark:bg-zinc-900 p-4 space-y-2.5"
-            >
-              <div className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full shrink-0 ${f.dotClass}`} />
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${f.badgeClass}`}>
-                  {f.name}
-                </span>
-              </div>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{f.desc}</p>
+            {/* Status badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/[.08] bg-[#1b1b1e] px-3.5 py-1.5 text-xs font-medium text-zinc-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+              Open Beta · 가입 즉시 100 크레딧 무료 제공
             </div>
-          ))}
-        </div>
 
-        <p className="text-xs text-zinc-400 dark:text-zinc-600 pt-2">
-          가입 즉시 100 크레딧이 지급됩니다
-        </p>
-      </div>
+            {/* Headline */}
+            <h1 className="text-5xl sm:text-6xl lg:text-[4.25rem] font-semibold tracking-tight leading-[1.06] font-headline">
+              <span className="text-zinc-100">좋은 결과는</span>
+              <br />
+              <span className="bg-gradient-to-r from-[#9d4edd] via-[#c084fc] to-[#e0b6ff] bg-clip-text text-transparent">
+                처음부터
+              </span>
+              <br />
+              <span className="text-zinc-100">나오지 않습니다.</span>
+            </h1>
+
+            {/* Supporting copy */}
+            <p className="text-lg text-zinc-400 leading-relaxed max-w-xl mx-auto">
+              텍스트와 이미지를 반복 생성하고, 변형들을 나란히 비교하며 최선의 결과를
+              찾아가는 <strong className="text-zinc-300 font-medium">AI 워크스페이스</strong>입니다.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Link
+                href="/register"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#9d4edd] px-7 py-3 text-sm font-semibold text-white hover:bg-[#8b3ecb] transition-colors shadow-lg shadow-[#9d4edd]/20"
+              >
+                무료로 시작하기
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/login"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-white/[.1] px-7 py-3 text-sm font-medium text-zinc-300 hover:text-zinc-100 hover:bg-white/[.04] hover:border-white/[.16] transition-all"
+              >
+                로그인
+              </Link>
+            </div>
+
+            <p className="text-xs text-zinc-600 pt-1">
+              신용카드 없이 무료로 시작하세요 · 가입 즉시 사용 가능
+            </p>
+          </div>
+        </section>
+
+        {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
+        <section className="py-24 px-6 border-t border-white/[.05]">
+          <div className="max-w-5xl mx-auto">
+
+            {/* Section label */}
+            <div className="text-center mb-16 space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-zinc-600">
+                워크플로우
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight font-headline text-zinc-50">
+                이렇게 작동합니다
+              </h2>
+            </div>
+
+            {/* Steps */}
+            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+
+              {/* Connecting line (desktop) */}
+              <div
+                aria-hidden
+                className="hidden md:block absolute top-[20px] left-[calc(100%/6)] right-[calc(100%/6)] h-px bg-gradient-to-r from-transparent via-white/[.08] to-transparent"
+              />
+
+              {STEPS.map((step) => (
+                <div key={step.n} className="relative space-y-4">
+
+                  {/* Number circle */}
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[.1] bg-[#1b1b1e] text-sm font-semibold text-zinc-400 font-mono relative z-10">
+                    {step.n}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-base font-semibold text-zinc-100 font-headline">
+                      {step.title}
+                    </h3>
+                    <p className="text-sm text-zinc-500 leading-relaxed">
+                      {step.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── WHY DIFFERENT ────────────────────────────────────────────────── */}
+        <section className="py-24 px-6 border-t border-white/[.05]">
+          <div className="max-w-5xl mx-auto">
+
+            {/* Section label + headline */}
+            <div className="mb-14 space-y-3 max-w-2xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-zinc-600">
+                왜 다른가
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight font-headline text-zinc-50">
+                단순한 생성기가 아닙니다.
+              </h2>
+              <p className="text-base text-zinc-500 leading-relaxed">
+                한 번 생성하고 잊는 도구가 아닙니다. 아이디어를 반복하고 결과를
+                관리하는 워크스페이스입니다. 생성한 모든 결과가 체계적으로 쌓입니다.
+              </p>
+            </div>
+
+            {/* Feature grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {FEATURES.map((f) => (
+                <div
+                  key={f.title}
+                  className="group rounded-xl border border-white/[.06] bg-[#1b1b1e] p-6 space-y-3 hover:border-white/[.1] hover:bg-[#1e1e22] transition-all duration-200"
+                >
+                  <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[#9d4edd]/10 border border-[#9d4edd]/20 text-[#c084fc]">
+                    {f.icon}
+                  </div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-sm font-semibold text-zinc-200 font-headline">
+                      {f.title}
+                    </h3>
+                    <p className="text-sm text-zinc-500 leading-relaxed">
+                      {f.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Contrast note — honest, grounded */}
+            <div className="mt-8 rounded-xl border border-white/[.06] bg-[#1b1b1e] px-6 py-5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium text-zinc-300">
+                    현재 지원 모듈: 텍스트 생성 (GPT-4o-mini) · 이미지 생성 (DALL·E 3)
+                  </p>
+                  <p className="text-xs text-zinc-600">
+                    크레딧 기반 과금 · 가입 즉시 100 크레딧 제공 · 추가 모듈 순차 추가 예정
+                  </p>
+                </div>
+                <Link
+                  href="/register"
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-white/[.1] px-4 py-2 text-xs font-medium text-zinc-300 hover:text-zinc-100 hover:bg-white/[.04] transition-colors"
+                >
+                  시작하기 →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BOTTOM CTA ───────────────────────────────────────────────────── */}
+        <section className="py-24 px-6 border-t border-white/[.05]">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+
+            <div className="space-y-4">
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight font-headline text-zinc-50">
+                지금 시작하세요
+              </h2>
+              <p className="text-base text-zinc-400 leading-relaxed">
+                가입 즉시 100 크레딧이 제공됩니다.
+                <br />
+                신용카드 없이, 지금 바로 첫 번째 결과를 만들어 보세요.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/register"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#9d4edd] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#8b3ecb] transition-colors shadow-lg shadow-[#9d4edd]/20"
+              >
+                계정 만들기
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/login"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-white/[.1] px-8 py-3.5 text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-white/[.04] hover:border-white/[.16] transition-all"
+              >
+                이미 계정이 있으신가요? 로그인
+              </Link>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
+      <footer className="border-t border-white/[.05] py-8 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-zinc-500 font-headline tracking-tight">
+            AI Studio
+          </span>
+          <p className="text-xs text-zinc-700 text-center sm:text-right">
+            텍스트 &amp; 이미지 AI 워크스페이스 · © {new Date().getFullYear()}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

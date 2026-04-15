@@ -36,11 +36,15 @@ export default function SideNav({ user }: { user: SessionUser }) {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col border-r border-white/[.08] bg-[#1b1b1e] z-20">
-      {/* Brand */}
+      {/* Brand — links to home page */}
       <div className="px-5 h-14 flex items-center border-b border-white/[.08] shrink-0">
-        <span className="text-base font-semibold text-white font-headline tracking-tight">
+        <Link
+          href="/"
+          prefetch={false}
+          className="text-base font-semibold text-white font-headline tracking-tight hover:text-zinc-200 transition-colors"
+        >
           AI Studio
-        </span>
+        </Link>
       </div>
 
       {/* Navigation */}

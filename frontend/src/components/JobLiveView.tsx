@@ -14,6 +14,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Job } from "@/lib/api";
+import { useFavorites, buildGroupKey } from "@/lib/useFavorites";
 import CopyButton from "./CopyButton";
 import ImagePreview from "./ImagePreview";
 import DownloadButton from "./DownloadButton";
@@ -303,6 +304,66 @@ function SidebarContinue({
   );
 }
 
+// ─── 사이드바: 결과 선택 (즐겨찾기) ──────────────────────────────────────────
+//
+// localStorage-backed. Amber star = "chosen version" for this prompt family.
+// Renders only when the job is COMPLETED with output AND has a prompt (groupKey exists).
+
+function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
+  if (filled) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005z" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+    </svg>
+  );
+}
+
+function SidebarFavorite({
+  isSelected,
+  onToggle,
+}: {
+  isSelected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <SidebarSection title="결과 선택">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+          isSelected
+            ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/15"
+            : "border border-white/[.1] text-zinc-400 hover:text-zinc-200 hover:border-white/[.18]"
+        }`}
+      >
+        <StarIcon filled={isSelected} className="h-4 w-4" />
+        {isSelected ? "선택된 버전" : "이 결과 선택하기"}
+      </button>
+
+      {isSelected && (
+        <div className="mt-2.5 space-y-1.5 text-center">
+          <p className="text-[11px] text-zinc-600 leading-relaxed">
+            이 프롬프트의 대표 결과입니다.
+          </p>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="text-[11px] text-zinc-600 hover:text-zinc-400 underline underline-offset-2 transition-colors"
+          >
+            선택 해제
+          </button>
+        </div>
+      )}
+    </SidebarSection>
+  );
+}
+
 // ─── 사이드바: 상세 정보 ──────────────────────────────────────────────────────
 
 function SidebarDetails({ job }: { job: Job }) {
@@ -344,6 +405,12 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
   const [job, setJob]               = useState<Job>(initialJob);
   const [isPolling, setIsPolling]   = useState(() => ACTIVE_STATUSES.has(initialJob.status));
   const [justCompleted, setJustCompleted] = useState(false);
+
+  // ─── Favorites ──────────────────────────────────────────────────────────────
+
+  const { isFavorite, toggleFavorite } = useFavorites();
+  // groupKey is null when the job has no prompt (can't be grouped / selected)
+  const groupKey = buildGroupKey(job.moduleName, job.inputPayload);
 
   // ─── Polling lifecycle ───────────────────────────────────────────────────────
   //
@@ -532,6 +599,14 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           <SidebarStatus job={job} isPolling={isPolling} />
           <SidebarActions job={job} isImage={isImage} />
 
+          {/* Result selection — only for COMPLETED jobs with a prompt */}
+          {isCompleted && hasOutput && groupKey && (
+            <SidebarFavorite
+              isSelected={isFavorite(groupKey, job.id)}
+              onToggle={() => toggleFavorite(groupKey, job.id)}
+            />
+          )}
+
           {isCompleted && hasPrompt && (
             <SidebarContinue
               job={job}
@@ -569,9 +644,13 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
         </aside>
       </div>
 
-      {/* ── 관련 결과 비교 — polled job 상태를 그대로 전달 ── */}
+      {/* ── 관련 결과 비교 — polled job 상태 + favorites API 전달 ── */}
       {relatedJobs.length > 0 && (
-        <RelatedResults currentJob={job} relatedJobs={relatedJobs} />
+        <RelatedResults
+          currentJob={job}
+          relatedJobs={relatedJobs}
+          favoritesApi={{ isFavorite, toggleFavorite }}
+        />
       )}
 
     </div>
