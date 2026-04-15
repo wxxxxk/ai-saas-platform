@@ -17,7 +17,7 @@ function isSupabaseUrl(url: string) {
   return url.includes("supabase.co");
 }
 
-export default function DownloadButton({ url }: { url: string }) {
+export default function DownloadButton({ url, compact = false }: { url: string; compact?: boolean }) {
   const [status, setStatus] = useState<"idle" | "pending" | "error">("idle");
 
   const isSupabase = isSupabaseUrl(url);
@@ -80,7 +80,7 @@ export default function DownloadButton({ url }: { url: string }) {
     );
   }
 
-  // OpenAI 임시 URL: 새 탭 열기 + 만료 안내
+  // OpenAI 임시 URL: 새 탭 열기 + 만료 안내 (compact 모드에서는 안내 텍스트 생략)
   return (
     <div className="flex items-center gap-2">
       <button
@@ -93,7 +93,9 @@ export default function DownloadButton({ url }: { url: string }) {
         </svg>
         새 탭으로 열기
       </button>
-      <span className="text-xs text-amber-500/80">임시 URL — 약 1시간 후 만료</span>
+      {!compact && (
+        <span className="text-xs text-amber-500/80">임시 URL — 약 1시간 후 만료</span>
+      )}
     </div>
   );
 }

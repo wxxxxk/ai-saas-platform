@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import JobList from "@/components/JobList";
+import JobCard from "@/components/JobCard";
 import ModuleCard from "@/components/ModuleCard";
 import TopUpForm from "@/components/TopUpForm";
 import { AuthError, getJobs, getMe, getModules, type AiModule, type Job, type MeResponse } from "@/lib/api";
@@ -145,18 +146,40 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      {/* Job 목록 */}
+      {/* Job 목록 — 최신 6개 카드 */}
       <section>
         <div className="mb-4 flex items-end justify-between">
           <div>
             <h2 className="text-xl font-semibold text-zinc-50 font-headline">Recent Jobs</h2>
             <p className="mt-0.5 text-sm text-zinc-500">최근 실행된 작업 내역입니다.</p>
           </div>
-          <span className="text-sm tabular-nums text-zinc-500 pb-0.5">
-            {jobs.length}개
-          </span>
+          <Link
+            href="/jobs"
+            prefetch={false}
+            className="text-sm text-zinc-500 hover:text-zinc-200 transition-colors pb-0.5"
+          >
+            전체 보기 →
+          </Link>
         </div>
-        <JobList jobs={jobs} />
+
+        {jobs.length === 0 ? (
+          <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-6 py-14 text-center space-y-2">
+            <p className="text-sm font-medium text-zinc-400">아직 실행된 Job이 없습니다.</p>
+            <p className="text-xs text-zinc-600">
+              위 모듈에서 프롬프트를 입력하고 Generate를 눌러보세요.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs
+              .slice()
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .slice(0, 6)
+              .map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+          </div>
+        )}
       </section>
 
       {/* 크레딧 충전 */}

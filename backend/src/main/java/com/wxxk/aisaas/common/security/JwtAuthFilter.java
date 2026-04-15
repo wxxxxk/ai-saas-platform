@@ -33,7 +33,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (header == null || !header.startsWith("Bearer ")) {
             // Authorization 헤더 자체가 없는 경우 — 프론트에서 토큰을 안 보낸 것.
-            // /api/auth/login, /api/auth/register 는 정상적으로 헤더가 없으므로 DEBUG로만 기록.
+            // /api/auth
+            // /login, /api/auth/register 는 정상적으로 헤더가 없으므로 DEBUG로만 기록.
             log.debug("[JwtAuthFilter] No Bearer token — method={} uri={}", request.getMethod(), uri);
         } else {
             String token = header.substring(7);
