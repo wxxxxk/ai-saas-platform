@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { createJob } from "@/lib/actions";
 
 interface Props {
@@ -14,29 +14,30 @@ interface Props {
  * createJob()이 jobId를 반환하면 window.location.assign()으로 새 Job 상세 페이지로 이동.
  */
 export default function RegenerateButton({ moduleId, prompt, creditCost }: Props) {
-  const [status, setStatus] = useState<"idle" | "pending" | "error">("idle");
+  const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  async function handleRegenerate() {
-    setStatus("pending");
+  function handleRegenerate() {
     setErrorMsg(null);
-    try {
-      const jobId = await createJob(moduleId, prompt);
-      window.location.assign(`/jobs/${jobId}`);
-    } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "재생성에 실패했습니다.");
-      setStatus("error");
-    }
+    startTransition(async () => {
+      try {
+        const jobId = await createJob(moduleId, prompt);
+        window.location.assign(`/jobs/${jobId}`);
+      } catch (e) {
+        setErrorMsg(e instanceof Error ? e.message : "재생성에 실패했습니다.");
+      }
+    });
   }
 
   return (
     <div className="space-y-1.5">
       <button
+        type="button"
         onClick={handleRegenerate}
-        disabled={status === "pending"}
+        disabled={isPending}
         className="inline-flex items-center gap-1.5 rounded-lg border border-[#9d4edd]/40 bg-[#9d4edd]/10 px-3 py-1.5 text-xs font-medium text-[#e0b6ff] hover:bg-[#9d4edd]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        {status === "pending" ? (
+        {isPending ? (
           <>
             <span className="h-3 w-3 animate-spin rounded-full border border-purple-500 border-t-purple-200" />
             생성 중…

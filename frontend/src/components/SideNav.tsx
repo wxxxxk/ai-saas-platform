@@ -79,6 +79,7 @@ export default function SideNav({ user }: { user: SessionUser }) {
           </div>
         </div>
         <button
+          type="button"
           onClick={handleLogout}
           disabled={isPending}
           className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50"

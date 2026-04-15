@@ -46,6 +46,7 @@ export default function JobError({
         </p>
         <div className="flex items-center justify-center gap-3 pt-2">
           <button
+            type="button"
             onClick={reset}
             className="rounded-lg bg-zinc-700 hover:bg-zinc-600 px-4 py-2 text-sm font-medium text-zinc-100 transition-colors"
           >
