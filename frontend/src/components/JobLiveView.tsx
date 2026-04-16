@@ -44,6 +44,13 @@ const MODULE_STYLE: Record<string, { badge: string; label: string }> = {
   TRANSLATION:      { badge: "bg-sky-900/40 text-sky-300",        label: "Translation"      },
 };
 
+const PROVIDER_LABEL: Record<string, string> = {
+  OPENAI:       "OpenAI",
+  GEMINI:       "Gemini",
+  CLAUDE:       "Claude",
+  STABILITY_AI: "Stability AI",
+};
+
 // ─── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
@@ -371,6 +378,10 @@ function SidebarDetails({ job }: { job: Job }) {
     <SidebarSection title="상세 정보">
       <dl className="space-y-3">
         <div>
+          <dt className="text-xs text-zinc-600 mb-0.5">공급자</dt>
+          <dd className="text-xs text-zinc-400">{PROVIDER_LABEL[job.provider] ?? job.provider}</dd>
+        </div>
+        <div>
           <dt className="text-xs text-zinc-600 mb-0.5">생성 시각</dt>
           <dd className="text-xs text-zinc-400 tabular-nums">{formatDate(job.createdAt)}</dd>
         </div>
@@ -520,6 +531,9 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
             {statusCfg.label}
           </span>
           {isPolling && <LiveBadge />}
+          <span className="inline-block rounded-full border border-white/[.08] px-2.5 py-0.5 text-xs font-medium text-zinc-500">
+            {PROVIDER_LABEL[job.provider] ?? job.provider}
+          </span>
         </div>
 
         <h1 className="text-2xl font-semibold text-zinc-50 font-headline leading-tight">

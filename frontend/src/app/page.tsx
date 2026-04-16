@@ -223,7 +223,7 @@ export default async function HomePage() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex-1 space-y-1">
                   <p className="text-sm font-medium text-zinc-300">
-                    현재 지원 모듈: 텍스트 생성 (GPT-4o-mini) · 이미지 생성 (DALL·E 3)
+                    현재 지원: 텍스트 생성 (OpenAI · Gemini · Claude) · 이미지 생성 (DALL·E 3)
                   </p>
                   <p className="text-xs text-zinc-600">
                     크레딧 기반 과금 · 가입 즉시 100 크레딧 제공 · 추가 모듈 순차 추가 예정
@@ -237,6 +237,89 @@ export default async function HomePage() {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── PRICING ──────────────────────────────────────────────────────── */}
+        <section className="py-24 px-6 border-t border-white/[.05]">
+          <div className="max-w-3xl mx-auto">
+
+            <div className="text-center mb-14 space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-zinc-600">
+                요금
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight font-headline text-zinc-50">
+                사용한 만큼만 내세요
+              </h2>
+              <p className="text-base text-zinc-500 leading-relaxed max-w-md mx-auto">
+                구독 없이 크레딧 단위로 사용합니다.
+                가입 즉시 <strong className="text-zinc-300 font-medium">100 크레딧</strong>을 무료로 드립니다.
+              </p>
+            </div>
+
+            {/* Free credit callout */}
+            <div className="mb-6 rounded-xl border border-[#9d4edd]/25 bg-[#9d4edd]/[.06] px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1 space-y-1">
+                <p className="text-sm font-semibold text-[#e0b6ff]">가입 시 100 크레딧 무료 제공</p>
+                <p className="text-xs text-zinc-500">
+                  텍스트 10회 + 이미지 3회를 바로 사용할 수 있습니다. 신용카드 불필요.
+                </p>
+              </div>
+              <Link
+                href="/register"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#9d4edd] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8b3ecb] transition-colors"
+              >
+                무료로 시작 →
+              </Link>
+            </div>
+
+            {/* Per-module costs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div className="rounded-xl border border-white/[.06] bg-[#1b1b1e] p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-900/30 border border-emerald-900/40 text-emerald-400">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-200">텍스트 생성</p>
+                    <p className="text-xs text-zinc-600">OpenAI · Gemini · Claude</p>
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-semibold text-zinc-100 tabular-nums">10</span>
+                  <span className="text-sm text-zinc-500">크레딧 / 회</span>
+                </div>
+                <p className="text-xs text-zinc-600 leading-relaxed">
+                  원하는 AI 공급자를 직접 선택해 생성할 수 있습니다.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/[.06] bg-[#1b1b1e] p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-purple-900/30 border border-purple-900/40 text-purple-400">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-200">이미지 생성</p>
+                    <p className="text-xs text-zinc-600">DALL·E 3 (OpenAI)</p>
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-semibold text-zinc-100 tabular-nums">30</span>
+                  <span className="text-sm text-zinc-500">크레딧 / 회</span>
+                </div>
+                <p className="text-xs text-zinc-600 leading-relaxed">
+                  1024×1024 HD 이미지를 즉시 생성합니다. 결과는 영구 보관됩니다.
+                </p>
+              </div>
+
+            </div>
+
           </div>
         </section>
 
