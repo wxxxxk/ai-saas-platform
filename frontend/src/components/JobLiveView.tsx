@@ -196,19 +196,28 @@ function TextResultSection({
 
   return (
     <div
-      className={`rounded-xl border p-5 space-y-4 transition-all duration-700 ${
+      className={`rounded-xl border p-5 space-y-3 transition-all duration-700 ${
         highlight
           ? "border-green-800/40 bg-green-950/10"
           : "border-white/[.08] bg-[#1b1b1e]"
       }`}
     >
+      {/* 액션 헤더 — 통계와 복사 버튼을 결과 텍스트 위에 배치해 즉시 접근 가능하게 한다 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 text-xs tabular-nums text-zinc-700">
+          <span>{wordCount.toLocaleString()} 단어</span>
+          <span className="text-zinc-800">·</span>
+          <span>{charCount.toLocaleString()} 자</span>
+        </div>
+        <CopyButton
+          text={text}
+          className="inline-flex items-center gap-1.5 rounded-md border border-white/[.08] bg-zinc-800/50 px-2.5 py-1 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors"
+        />
+      </div>
+
+      {/* 텍스트 콘텐츠 */}
       <div className="rounded-lg bg-[#131316] border border-white/[.05] p-5">
         <p className="text-sm text-zinc-200 whitespace-pre-wrap leading-7">{text}</p>
-      </div>
-      <div className="flex items-center gap-4 text-xs text-zinc-700 tabular-nums">
-        <span>{wordCount.toLocaleString()} 단어</span>
-        <span>·</span>
-        <span>{charCount.toLocaleString()} 자</span>
       </div>
     </div>
   );
@@ -269,14 +278,15 @@ function SidebarStatus({ job, isPolling }: { job: Job; isPolling: boolean }) {
 function SidebarActions({ job, isImage }: { job: Job; isImage: boolean }) {
   if (job.status !== "COMPLETED" || !job.outputPayload) return null;
   return (
-    <SidebarSection title="결과 저장">
-      <div className="flex flex-col items-start gap-2">
-        {isImage ? (
-          <DownloadButton url={job.outputPayload} />
-        ) : (
-          <CopyButton text={job.outputPayload} />
-        )}
-      </div>
+    <SidebarSection title={isImage ? "이미지 저장" : "텍스트 복사"}>
+      {isImage ? (
+        <DownloadButton url={job.outputPayload} />
+      ) : (
+        <CopyButton
+          text={job.outputPayload}
+          className="w-full rounded-lg border border-white/[.1] bg-zinc-800/50 px-3 py-2 text-xs font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors text-center"
+        />
+      )}
     </SidebarSection>
   );
 }
@@ -554,7 +564,20 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           {/* 프롬프트 */}
           {hasPrompt && (
             <section>
-              <SectionLabel>Your Prompt</SectionLabel>
+              {/* 헤더: 섹션 라벨 + 완료 시 수정 바로가기 링크 */}
+              <div className="mb-2.5 flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                  Your Prompt
+                </p>
+                {isCompleted && (
+                  <a
+                    href="#continue"
+                    className="text-[10px] text-zinc-600 hover:text-zinc-300 transition-colors"
+                  >
+                    프롬프트 수정 ↓
+                  </a>
+                )}
+              </div>
               <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-5 py-4">
                 <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
                   {job.inputPayload}
@@ -619,6 +642,11 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
               isSelected={isFavorite(groupKey, job.id)}
               onToggle={() => toggleFavorite(groupKey, job.id)}
             />
+          )}
+
+          {/* scroll anchor — "Your Prompt" 섹션의 "프롬프트 수정 ↓" 링크 대상 */}
+          {(isCompleted || isFailed) && hasPrompt && (
+            <span id="continue" className="sr-only" aria-hidden />
           )}
 
           {isCompleted && hasPrompt && (
