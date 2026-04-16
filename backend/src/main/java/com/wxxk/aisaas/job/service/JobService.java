@@ -56,8 +56,7 @@ public class JobService {
             throw new InactiveModuleException(module.getName());
         }
 
-        // 1단계: 공급자 결정 — 현재는 모듈의 defaultProvider를 항상 사용한다.
-        // 향후 request.getProvider() 가 추가되면 resolveProvider 내에서 우선순위를 처리한다.
+        // 1단계: 공급자 결정 — request.provider 우선, 없으면 module.defaultProvider
         AiProvider resolvedProvider = resolveProvider(module, request);
 
         // 2단계: 크레딧 차감 (잔액 부족 시 InsufficientCreditException → 422)
@@ -103,12 +102,18 @@ public class JobService {
     /**
      * 사용할 AI 공급자를 결정한다.
      *
-     * 현재 구현: 항상 module.getDefaultProvider() 를 반환한다.
-     * 향후 확장: request 에 provider 필드가 추가되면 다음 우선순위로 처리한다.
-     *   1. request.getProvider() (사용자 지정)
-     *   2. module.getDefaultProvider() (모듈 기본값)
+     * 우선순위:
+     *   1. request.getProvider() — 요청에 명시된 경우 (API / 테스트 시 직접 지정)
+     *   2. module.getDefaultProvider() — 명시 없으면 모듈 기본값 사용
+     *
+     * 기존 프론트엔드는 provider 필드를 보내지 않으므로 null → 기본값으로 처리되어
+     * 동작 변화 없음.
      */
     private AiProvider resolveProvider(AiModule module, CreateJobRequest request) {
+        if (request.getProvider() != null) {
+            log.info("[JobService] provider override from request: {}", request.getProvider());
+            return request.getProvider();
+        }
         return module.getDefaultProvider();
     }
 

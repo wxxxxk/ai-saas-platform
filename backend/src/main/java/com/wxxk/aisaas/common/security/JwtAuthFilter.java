@@ -23,6 +23,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
+    /**
+     * H2 콘솔 경로는 JWT 인증과 무관하므로 필터 실행을 건너뛴다.
+     * DevSecurityConfig 가 H2 콘솔 요청을 전담하므로 이 필터가 개입할 필요가 없다.
+     * (prod에서는 H2 콘솔 자체가 비활성화되므로 이 경로에 요청이 오지 않는다)
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath().startsWith("/h2-console");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response, FilterChain chain)

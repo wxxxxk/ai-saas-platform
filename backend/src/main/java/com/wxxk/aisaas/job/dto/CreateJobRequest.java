@@ -1,5 +1,6 @@
 package com.wxxk.aisaas.job.dto;
 
+import com.wxxk.aisaas.module.enums.AiProvider;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,4 +18,11 @@ public class CreateJobRequest {
     @NotBlank(message = "프롬프트를 입력해 주세요.")
     @Size(max = 4000, message = "프롬프트는 최대 4,000자까지 입력할 수 있습니다.")
     private String inputPayload;
+
+    /**
+     * 사용할 AI 공급자. null이면 모듈의 defaultProvider를 사용한다.
+     * 유효값: "OPENAI", "GEMINI", "CLAUDE", "STABILITY_AI"
+     * 프론트엔드는 이 필드를 보내지 않아도 되며, 기존 동작은 그대로 유지된다.
+     */
+    private AiProvider provider;
 }
