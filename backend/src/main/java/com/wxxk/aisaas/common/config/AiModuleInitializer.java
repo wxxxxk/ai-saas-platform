@@ -2,6 +2,7 @@ package com.wxxk.aisaas.common.config;
 
 import com.wxxk.aisaas.module.entity.AiModule;
 import com.wxxk.aisaas.module.enums.AiProvider;
+import com.wxxk.aisaas.module.executor.AiModuleExecutor;
 import com.wxxk.aisaas.module.repository.AiModuleRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
 public class AiModuleInitializer implements ApplicationRunner {
 
     private final AiModuleRepository aiModuleRepository;
+    private final List<AiModuleExecutor> executors;
 
     // 모듈 정의 레코드: name, description, creditCostPerCall, active, defaultProvider
     private record ModuleDef(String name, String description, int cost, boolean active,
@@ -80,5 +82,20 @@ public class AiModuleInitializer implements ApplicationRunner {
         }
 
         log.info("AiModuleInitializer: inserted={} updated={}", inserted, updated);
+
+        // executor 커버리지 검사 — 활성 모듈 중 defaultProvider에 대응하는 executor가
+        // 없으면 해당 모듈로 생성된 job이 런타임에 실패한다. 배포 시 조기에 발견하기 위해 WARN을 기록한다.
+        aiModuleRepository.findAll().stream()
+                .filter(AiModule::isActive)
+                .forEach(m -> {
+                    boolean covered = executors.stream()
+                            .anyMatch(e -> e.moduleName().equals(m.getName())
+                                       && e.provider() == m.getDefaultProvider());
+                    if (!covered) {
+                        log.warn("AiModuleInitializer: no executor registered for active module={} defaultProvider={}"
+                                + " — jobs for this module will fail at runtime",
+                                m.getName(), m.getDefaultProvider());
+                    }
+                });
     }
 }

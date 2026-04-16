@@ -20,7 +20,7 @@ public class AiModuleController {
     public ResponseEntity<List<AiModuleResponse>> getActiveModules() {
         List<AiModuleResponse> response = aiModuleService.getActiveModules()
                 .stream()
-                .map(AiModuleResponse::from)
+                .map(m -> AiModuleResponse.from(m, aiModuleService.getSupportedProviders(m.getName())))
                 .toList();
         return ResponseEntity.ok(response);
     }

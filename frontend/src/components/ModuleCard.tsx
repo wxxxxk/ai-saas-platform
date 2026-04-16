@@ -5,8 +5,14 @@ import { createJob } from "@/lib/actions";
 import type { AiModule } from "@/lib/api";
 
 const PROMPT_MODULES = new Set(["TEXT_GENERATION", "IMAGE_GENERATION"]);
-const TEXT_PROVIDERS = ["OPENAI", "GEMINI"] as const;
-type TextProvider = typeof TEXT_PROVIDERS[number];
+
+// 알려진 공급자 이름의 표시용 레이블. 새 공급자는 이 맵에만 추가하면 된다.
+const PROVIDER_LABELS: Record<string, string> = {
+  OPENAI: "OpenAI",
+  GEMINI: "Gemini",
+  CLAUDE: "Claude",
+  STABILITY_AI: "Stability",
+};
 
 const MODULE_META: Record<
   string,
@@ -53,7 +59,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
   const [isPending, setIsPending] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [provider, setProvider] = useState<TextProvider | undefined>(undefined);
+  const [provider, setProvider] = useState<string | undefined>(undefined);
 
   const needsPrompt = PROMPT_MODULES.has(module.name);
   const meta = getModuleMeta(module.name);
@@ -134,11 +140,11 @@ export default function ModuleCard({ module }: { module: AiModule }) {
           </>
         )}
 
-        {module.name === "TEXT_GENERATION" && (
+        {module.supportedProviders.length > 1 && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-zinc-500">Provider</span>
             <div className="flex gap-1">
-              {TEXT_PROVIDERS.map((p) => (
+              {module.supportedProviders.map((p) => (
                 <button
                   key={p}
                   type="button"
@@ -150,7 +156,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
                       : "bg-[#131316] text-zinc-500 border border-white/[.07] hover:text-zinc-300"
                   }`}
                 >
-                  {p === "OPENAI" ? "OpenAI" : "Gemini"}
+                  {PROVIDER_LABELS[p] ?? p}
                 </button>
               ))}
             </div>

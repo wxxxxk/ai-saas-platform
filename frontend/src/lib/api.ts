@@ -28,6 +28,7 @@ export type AiModule = {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  supportedProviders: string[]; // executor 기준 — 빈 배열이면 provider 선택 UI 미표시
 };
 
 // JobResponse와 일치: backend job/dto/JobResponse.java

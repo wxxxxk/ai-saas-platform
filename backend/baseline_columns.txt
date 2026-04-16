@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS plans (
+CREATE TABLE IF NOT EXISTS users (
+    password_hash VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS credit_wallets (
+CREATE TABLE IF NOT EXISTS ai_modules (
+CREATE TABLE IF NOT EXISTS jobs (
+    output_payload TEXT,
+CREATE TABLE IF NOT EXISTS assets (
