@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import type { Job } from "@/lib/api";
 import VariationGroup, { type VariationGroupData } from "./VariationGroup";
+import { useFavorites } from "@/lib/useFavorites";
 
 // ─── Filter ───────────────────────────────────────────────────────────────────
 
-type FilterKey = "ALL" | "COMPLETED" | "RUNNING" | "PENDING" | "FAILED";
+type FilterKey = "ALL" | "COMPLETED" | "RUNNING" | "PENDING" | "FAILED" | "SELECTED";
 
 const FILTER_TABS: { key: FilterKey; label: string }[] = [
   { key: "ALL",       label: "전체"    },
@@ -14,7 +16,189 @@ const FILTER_TABS: { key: FilterKey; label: string }[] = [
   { key: "RUNNING",   label: "진행 중"  },
   { key: "PENDING",   label: "대기 중"  },
   { key: "FAILED",    label: "실패"    },
+  { key: "SELECTED",  label: "선택됨"  },
 ];
+
+// ─── Module config (local subset for selected cards) ──────────────────────────
+
+const MODULE_CFG_SELECTED: Record<string, { label: string; badge: string; accentFrom: string }> = {
+  IMAGE_GENERATION: { label: "Image",     badge: "bg-purple-900/40 text-purple-300",   accentFrom: "from-purple-500/20"  },
+  TEXT_GENERATION:  { label: "Text",      badge: "bg-emerald-900/40 text-emerald-300", accentFrom: "from-emerald-500/20" },
+  SUMMARIZATION:    { label: "Summary",   badge: "bg-orange-900/40 text-orange-300",   accentFrom: "from-orange-500/20"  },
+  TRANSLATION:      { label: "Translate", badge: "bg-sky-900/40 text-sky-300",         accentFrom: "from-sky-500/20"     },
+};
+
+// ─── Star icon (local copy — used by SelectedCard) ───────────────────────────
+
+function StarIconFilled({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005z" />
+    </svg>
+  );
+}
+
+// ─── Selected items type ──────────────────────────────────────────────────────
+
+type SelectedItem = { group: VariationGroupData; job: Job };
+
+// ─── Selected card ────────────────────────────────────────────────────────────
+
+function SelectedCard({ item }: { item: SelectedItem }) {
+  const { group, job } = item;
+  const isImage   = job.moduleName === "IMAGE_GENERATION";
+  const modCfg    = MODULE_CFG_SELECTED[job.moduleName] ?? {
+    label: job.moduleName,
+    badge: "bg-zinc-800 text-zinc-400",
+    accentFrom: "from-zinc-500/10",
+  };
+
+  const relTime = (() => {
+    const diff = Date.now() - new Date(job.createdAt).getTime();
+    const mins = Math.floor(diff / 60_000);
+    const hrs  = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    if (mins < 1)  return "방금 전";
+    if (mins < 60) return `${mins}분 전`;
+    if (hrs  < 24) return `${hrs}시간 전`;
+    return `${days}일 전`;
+  })();
+
+  return (
+    <div className="group/card flex flex-col rounded-xl border border-amber-500/20 bg-[#1b1b1e] overflow-hidden hover:border-amber-500/40 transition-all duration-200">
+
+      {/* Accent line — module colour bleeds into amber */}
+      <div className={`h-px bg-gradient-to-r ${modCfg.accentFrom} via-amber-500/15 to-transparent`} />
+
+      <div className="flex flex-col flex-1 p-5 space-y-3.5">
+
+        {/* Header row — module badge + selected pill */}
+        <div className="flex items-center justify-between gap-2">
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${modCfg.badge}`}>
+            {modCfg.label}
+          </span>
+          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/25 rounded-full px-2 py-0.5">
+            <StarIconFilled className="h-2.5 w-2.5" />
+            선택됨
+          </span>
+        </div>
+
+        {/* Prompt */}
+        <p className="text-sm font-medium text-zinc-200 line-clamp-2 leading-snug">
+          {group.prompt ?? (
+            <span className="italic text-zinc-600">프롬프트 없음</span>
+          )}
+        </p>
+
+        {/* Output preview */}
+        {isImage && job.outputPayload ? (
+          <div className="overflow-hidden rounded-lg border border-amber-500/15 bg-zinc-900">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={job.outputPayload}
+              alt=""
+              className="w-full h-44 object-cover"
+              loading="lazy"
+            />
+          </div>
+        ) : job.outputPayload ? (
+          <p className="text-xs text-zinc-400 line-clamp-4 leading-relaxed rounded-lg border border-white/[.04] bg-zinc-900/50 px-3.5 py-3">
+            {job.outputPayload.slice(0, 220)}
+          </p>
+        ) : null}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 mt-auto pt-1">
+          <div className="flex items-center gap-3 text-[11px] text-zinc-600 tabular-nums">
+            {group.jobs.length > 1 && (
+              <span>{group.jobs.length}개 변형</span>
+            )}
+            <span>{relTime}</span>
+          </div>
+
+          <Link
+            href={`/jobs/${job.id}`}
+            prefetch={false}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-white/[.08] px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:border-amber-500/30 hover:bg-amber-500/[.04] transition-all"
+          >
+            워크스페이스 열기
+            <span className="text-zinc-600 group-hover/card:text-amber-400 transition-colors">→</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Selected empty state ─────────────────────────────────────────────────────
+
+function SelectedEmptyState({ onGoToAll }: { onGoToAll: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center space-y-5">
+      <div className="rounded-full bg-amber-500/[.07] border border-amber-500/20 p-5">
+        <svg
+          className="h-8 w-8 text-amber-400/50"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+          />
+        </svg>
+      </div>
+
+      <div className="space-y-2 max-w-xs">
+        <p className="text-sm font-medium text-zinc-300">아직 선택된 결과가 없습니다</p>
+        <p className="text-xs text-zinc-600 leading-relaxed">
+          각 아이디어의 결과 목록에서 별표(★)를 눌러 최선의 버전을 선택해 두세요.
+          선택한 결과들이 여기서 한눈에 모입니다.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onGoToAll}
+        className="inline-flex items-center gap-2 rounded-lg border border-white/[.1] px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:border-white/[.2] transition-all"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        히스토리로 돌아가기
+      </button>
+    </div>
+  );
+}
+
+// ─── Selected view ────────────────────────────────────────────────────────────
+
+function SelectedView({
+  items,
+  onGoToAll,
+}: {
+  items: SelectedItem[];
+  onGoToAll: () => void;
+}) {
+  if (items.length === 0) {
+    return <SelectedEmptyState onGoToAll={onGoToAll} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-zinc-600">
+        <span className="text-amber-400/80 font-medium tabular-nums">{items.length}개</span>의 결과가 선택되어 있습니다
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {items.map((item) => (
+          <SelectedCard key={item.job.id} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ─── Grouping ─────────────────────────────────────────────────────────────────
 //
@@ -151,18 +335,42 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
 export default function JobHistoryView({ jobs }: { jobs: Job[] }) {
   const [activeFilter, setActiveFilter] = useState<FilterKey>("ALL");
 
-  // 1. Filter individual jobs, then build variation groups
+  // Favorites store — hydrates from localStorage after mount
+  const { getFavoriteJobId } = useFavorites();
+
+  // All groups — always over the full job list (needed for SELECTED tab)
+  const allGroups = useMemo(() => buildGroups(jobs), [jobs]);
+
+  // 1. Filter individual jobs, then build variation groups (status tabs only)
   const filtered = useMemo(
-    () => (activeFilter === "ALL" ? jobs : jobs.filter((j) => j.status === activeFilter)),
+    () =>
+      activeFilter === "ALL" || activeFilter === "SELECTED"
+        ? jobs
+        : jobs.filter((j) => j.status === activeFilter),
     [jobs, activeFilter]
   );
-  const groups = useMemo(() => buildGroups(filtered), [filtered]);
+  const groups = useMemo(
+    () => (activeFilter === "ALL" || activeFilter === "SELECTED" ? allGroups : buildGroups(filtered)),
+    [activeFilter, allGroups, filtered]
+  );
 
   // 2. Time-section groups (ALL view only — filtered view uses flat list)
   const sections = useMemo(
     () => (activeFilter === "ALL" ? sectionByTime(groups) : null),
     [activeFilter, groups]
   );
+
+  // 3. Selected items — groups that have a chosen variation
+  const selectedItems = useMemo<SelectedItem[]>(() => {
+    return allGroups.flatMap((group) => {
+      if (!group.prompt) return []; // solo groups without prompt are not selectable
+      const selectedJobId = getFavoriteJobId(group.key);
+      if (!selectedJobId) return [];
+      const job = group.jobs.find((j) => j.id === selectedJobId);
+      if (!job) return [];
+      return [{ group, job }];
+    });
+  }, [allGroups, getFavoriteJobId]);
 
   // Stats — always over full, unfiltered job list
   const totalCredits   = useMemo(() => jobs.reduce((s, j) => s + j.creditUsed, 0), [jobs]);
@@ -188,23 +396,43 @@ export default function JobHistoryView({ jobs }: { jobs: Job[] }) {
       </div>
 
       {/* ── Filter tabs ── */}
-      <div className="flex items-center gap-1 border-b border-white/[.08]">
+      <div className="flex items-center gap-1 border-b border-white/[.08] overflow-x-auto">
         {FILTER_TABS.map(({ key, label }) => {
-          const count    = key === "ALL" ? jobs.length : jobs.filter((j) => j.status === key).length;
-          const isActive = activeFilter === key;
+          const isSelected = key === "SELECTED";
+          const count      = isSelected
+            ? selectedItems.length
+            : key === "ALL"
+              ? jobs.length
+              : jobs.filter((j) => j.status === key).length;
+          const isActive   = activeFilter === key;
           return (
             <button
               key={key}
               onClick={() => setActiveFilter(key)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 isActive
-                  ? "border-[#9d4edd] text-[#e0b6ff]"
+                  ? isSelected
+                    ? "border-amber-500 text-amber-300"
+                    : "border-[#9d4edd] text-[#e0b6ff]"
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
               }`}
             >
+              {isSelected && (
+                <StarIconFilled
+                  className={`h-3 w-3 ${isActive ? "text-amber-400" : "text-zinc-600"}`}
+                />
+              )}
               {label}
-              {count > 0 && (
-                <span className={`text-xs tabular-nums ${isActive ? "text-[#c084fc]" : "text-zinc-700"}`}>
+              {(count > 0 || isSelected) && (
+                <span
+                  className={`text-xs tabular-nums ${
+                    isActive
+                      ? isSelected
+                        ? "text-amber-400/80"
+                        : "text-[#c084fc]"
+                      : "text-zinc-700"
+                  }`}
+                >
                   {count}
                 </span>
               )}
@@ -214,7 +442,13 @@ export default function JobHistoryView({ jobs }: { jobs: Job[] }) {
       </div>
 
       {/* ── Content ── */}
-      {groups.length === 0 ? (
+      {activeFilter === "SELECTED" ? (
+        <SelectedView
+          items={selectedItems}
+          onGoToAll={() => setActiveFilter("ALL")}
+        />
+
+      ) : groups.length === 0 ? (
         <EmptyState isFiltered={activeFilter !== "ALL"} />
 
       ) : sections ? (
