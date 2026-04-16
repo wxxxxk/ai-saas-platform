@@ -11,10 +11,11 @@
  *  5. 헤더·결과·사이드바를 최신 job 데이터로 렌더
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import type { Job } from "@/lib/api";
 import { useFavorites, buildGroupKey } from "@/lib/useFavorites";
+import { createJob } from "@/lib/actions";
 import CopyButton from "./CopyButton";
 import ImagePreview from "./ImagePreview";
 import DownloadButton from "./DownloadButton";
@@ -309,6 +310,7 @@ function SidebarContinue({
         moduleId={job.moduleId}
         initialPrompt={job.inputPayload}
         creditCost={job.creditUsed}
+        defaultProvider={job.provider}
       />
       {relatedCount > 0 && (
         <p className="mt-3 text-[11px] leading-relaxed text-zinc-600 border-t border-white/[.05] pt-3">
@@ -426,6 +428,16 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
   const [job, setJob]               = useState<Job>(initialJob);
   const [isPolling, setIsPolling]   = useState(() => ACTIVE_STATUSES.has(initialJob.status));
   const [justCompleted, setJustCompleted] = useState(false);
+  const [isRegenerating, startRegenerate] = useTransition();
+
+  // 같은 프롬프트 + 같은 공급자로 새 Job을 생성해 해당 결과 페이지로 이동한다.
+  function handleQuickRegenerate() {
+    if (!job.inputPayload) return;
+    startRegenerate(async () => {
+      const jobId = await createJob(job.moduleId, job.inputPayload!, job.provider);
+      window.location.assign(`/jobs/${jobId}`);
+    });
+  }
 
   // ─── Favorites ──────────────────────────────────────────────────────────────
 
@@ -607,7 +619,38 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
             )}
 
             {hasOutput && !isImage && (
-              <TextResultSection text={job.outputPayload!} highlight={justCompleted} />
+              <>
+                <TextResultSection text={job.outputPayload!} highlight={justCompleted} />
+
+                {/* 빠른 재생성 — 사이드바 없이 한 번에 새 버전을 만든다 */}
+                {job.inputPayload && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleQuickRegenerate}
+                      disabled={isRegenerating}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[.1] px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/[.04] hover:border-white/[.18] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {isRegenerating ? (
+                        <>
+                          <span className="h-3 w-3 animate-spin rounded-full border border-white/30 border-t-white shrink-0" />
+                          생성 중…
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          새 버전 만들기
+                        </>
+                      )}
+                    </button>
+                    <span className="text-[10px] text-zinc-700 tabular-nums">
+                      −{job.creditUsed} cr
+                    </span>
+                  </div>
+                )}
+              </>
             )}
 
             {hasOutput && isImage && (

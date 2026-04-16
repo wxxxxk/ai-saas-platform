@@ -3,10 +3,22 @@
 import { useState, useTransition } from "react";
 import { createJob } from "@/lib/actions";
 
+const PROVIDER_LABELS: Record<string, string> = {
+  OPENAI:       "OpenAI",
+  GEMINI:       "Gemini",
+  CLAUDE:       "Claude",
+  STABILITY_AI: "Stability AI",
+};
+
 interface Props {
   moduleId: string;
   initialPrompt: string;
   creditCost: number;
+  /**
+   * 현재 결과를 만든 공급자. 전달하면 재생성 시 동일 공급자가 사용되고
+   * 인포 행에 공급자 이름이 표시된다. 미전달 시 모듈 기본 공급자를 사용한다.
+   */
+  defaultProvider?: string;
 }
 
 /**
@@ -16,19 +28,21 @@ interface Props {
  *   "재생성" vs "수정된 내용으로 생성"을 명확히 구분한다.
  * - 새 Job이 생성되면 window.location.assign()으로 해당 detail 페이지로 이동한다.
  * - "초기화" 버튼으로 원본 프롬프트로 되돌릴 수 있다.
+ * - defaultProvider를 전달하면 재생성 시 같은 공급자가 유지된다.
  */
 export default function EditPromptForm({
   moduleId,
   initialPrompt,
   creditCost,
+  defaultProvider,
 }: Props) {
   const [prompt, setPrompt] = useState(initialPrompt);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const trimmedPrompt    = prompt.trim();
-  const isDirty          = trimmedPrompt !== initialPrompt.trim();
-  const isEmpty          = trimmedPrompt.length === 0;
+  const trimmedPrompt = prompt.trim();
+  const isDirty       = trimmedPrompt !== initialPrompt.trim();
+  const isEmpty       = trimmedPrompt.length === 0;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,13 +51,18 @@ export default function EditPromptForm({
     setError(null);
     startTransition(async () => {
       try {
-        const jobId = await createJob(moduleId, trimmedPrompt);
+        // defaultProvider를 전달해 현재 결과와 동일한 공급자로 재생성한다.
+        const jobId = await createJob(moduleId, trimmedPrompt, defaultProvider);
         window.location.assign(`/jobs/${jobId}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "생성에 실패했습니다.");
       }
     });
   }
+
+  const providerLabel = defaultProvider
+    ? (PROVIDER_LABELS[defaultProvider] ?? defaultProvider)
+    : null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -67,10 +86,13 @@ export default function EditPromptForm({
         )}
       </div>
 
-      {/* 하단: 크레딧 정보 + 제출 버튼 */}
+      {/* 하단: 크레딧 + 공급자 정보 + 제출 버튼 */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-zinc-700 tabular-nums">
-          {creditCost} cr 소모 예정
+          {creditCost} cr
+          {providerLabel && (
+            <span className="ml-1.5 text-zinc-700">· {providerLabel}</span>
+          )}
         </span>
         <button
           type="submit"
