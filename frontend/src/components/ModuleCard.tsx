@@ -66,6 +66,13 @@ export default function ModuleCard({ module }: { module: AiModule }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // 브라우저 네이티브 required 대신 인라인 에러로 처리한다.
+    if (needsPrompt && !prompt.trim()) {
+      setError("프롬프트를 입력해 주세요.");
+      return;
+    }
+
     setError(null);
     setIsPending(true);
 
@@ -74,7 +81,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
       // startTransition + Server Action redirect() 조합은 post-action router.refresh()가
       // /dashboard RSC를 재요청하면서 navigation과 경합해 dashboard로 되돌아오는 문제가 있다.
       // window.location.assign()으로 hard navigation하면 router cache를 완전히 우회한다.
-      const jobId = await createJob(module.id, needsPrompt ? prompt : undefined, provider);
+      const jobId = await createJob(module.id, needsPrompt ? prompt.trim() : undefined, provider);
       window.location.assign(`/jobs/${jobId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -107,15 +114,29 @@ export default function ModuleCard({ module }: { module: AiModule }) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-auto">
         {needsPrompt && (
           <>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={meta.placeholder}
-              rows={3}
-              required
-              disabled={isPending || !module.active}
-              className="w-full resize-none rounded-lg border border-white/[.1] bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 disabled:opacity-50 transition"
-            />
+            <div className="space-y-1">
+              <textarea
+                value={prompt}
+                onChange={(e) => {
+                  setPrompt(e.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder={meta.placeholder}
+                rows={3}
+                disabled={isPending || !module.active}
+                className={`w-full resize-none rounded-lg border bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 disabled:opacity-50 transition ${
+                  error && !isPending
+                    ? "border-red-800/60 focus:ring-red-700/40"
+                    : "border-white/[.1] focus:ring-[#9d4edd]/50"
+                }`}
+              />
+              {/* 글자 수 카운터 — 입력 내용이 있을 때만 표시 */}
+              {prompt.length > 0 && !isPending && (
+                <p className="text-right text-[10px] tabular-nums text-zinc-700">
+                  {prompt.length} 자
+                </p>
+              )}
+            </div>
             {module.name === "IMAGE_GENERATION" && (
               <div className="rounded-lg bg-[#131316] border border-white/[.06] px-3 py-2.5 space-y-1.5">
                 <p className="text-xs font-medium text-zinc-500">
@@ -163,25 +184,40 @@ export default function ModuleCard({ module }: { module: AiModule }) {
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isPending || !module.active}
-          className="w-full rounded-lg bg-[#9d4edd] px-4 py-2 text-sm font-medium text-white hover:bg-[#8b3ecb] disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
-        >
-          {isPending
-            ? "생성 중…"
-            : !module.active
-              ? "비활성"
-              : needsPrompt
-                ? "Generate"
-                : "Run"}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="submit"
+            disabled={isPending || !module.active}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#9d4edd] px-4 py-2 text-sm font-medium text-white hover:bg-[#8b3ecb] disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+          >
+            {isPending ? (
+              <>
+                <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                처리 중…
+              </>
+            ) : !module.active ? (
+              "비활성"
+            ) : needsPrompt ? (
+              "Generate"
+            ) : (
+              "Run"
+            )}
+          </button>
 
-        {isPending && (
-          <p className="text-xs text-zinc-500 text-center animate-pulse">
-            AI가 응답을 생성하고 있습니다. 잠시만 기다려주세요…
-          </p>
-        )}
+          {/* 크레딧 소모 안내 — 활성 상태이고 대기 중이 아닐 때 */}
+          {module.active && !isPending && (
+            <p className="text-center text-[10px] tabular-nums text-zinc-700">
+              생성 시 {module.creditCostPerCall} cr 차감
+            </p>
+          )}
+
+          {/* 대기 중 안내 — 실제 발생하는 일(job 생성 요청)을 정확하게 안내 */}
+          {isPending && (
+            <p className="text-center text-[10px] text-zinc-500 animate-pulse">
+              잠시 후 결과 페이지로 이동합니다…
+            </p>
+          )}
+        </div>
       </form>
 
       {error && (
