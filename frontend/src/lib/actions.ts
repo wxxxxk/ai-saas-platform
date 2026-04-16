@@ -97,10 +97,20 @@ async function parseErrorMessage(res: Response, fallback: string): Promise<strin
  * 대신 jobId를 반환하고 클라이언트에서 window.location.assign()으로
  * hard navigation을 수행해 router cache 경합을 완전히 우회한다.
  */
-export async function createJob(moduleId: string, inputPayload?: string): Promise<string> {
+export async function createJob(
+  moduleId: string,
+  inputPayload?: string,
+  provider?: string
+): Promise<string> {
+  const body: Record<string, unknown> = {
+    moduleId,
+    inputPayload: inputPayload ?? "",
+  };
+  if (provider) body.provider = provider;
+
   const res = await backendFetch("/api/jobs", {
     method: "POST",
-    body: JSON.stringify({ moduleId, inputPayload: inputPayload ?? "" }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {

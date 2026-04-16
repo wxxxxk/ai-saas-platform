@@ -5,6 +5,8 @@ import { createJob } from "@/lib/actions";
 import type { AiModule } from "@/lib/api";
 
 const PROMPT_MODULES = new Set(["TEXT_GENERATION", "IMAGE_GENERATION"]);
+const TEXT_PROVIDERS = ["OPENAI", "GEMINI"] as const;
+type TextProvider = typeof TEXT_PROVIDERS[number];
 
 const MODULE_META: Record<
   string,
@@ -51,6 +53,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
   const [isPending, setIsPending] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [provider, setProvider] = useState<TextProvider | undefined>(undefined);
 
   const needsPrompt = PROMPT_MODULES.has(module.name);
   const meta = getModuleMeta(module.name);
@@ -65,7 +68,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
       // startTransition + Server Action redirect() 조합은 post-action router.refresh()가
       // /dashboard RSC를 재요청하면서 navigation과 경합해 dashboard로 되돌아오는 문제가 있다.
       // window.location.assign()으로 hard navigation하면 router cache를 완전히 우회한다.
-      const jobId = await createJob(module.id, needsPrompt ? prompt : undefined);
+      const jobId = await createJob(module.id, needsPrompt ? prompt : undefined, provider);
       window.location.assign(`/jobs/${jobId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -129,6 +132,29 @@ export default function ModuleCard({ module }: { module: AiModule }) {
               </div>
             )}
           </>
+        )}
+
+        {module.name === "TEXT_GENERATION" && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">Provider</span>
+            <div className="flex gap-1">
+              {TEXT_PROVIDERS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  disabled={isPending || !module.active}
+                  onClick={() => setProvider(provider === p ? undefined : p)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${
+                    provider === p
+                      ? "bg-[#9d4edd]/20 text-[#e0b6ff] border border-[#9d4edd]/40"
+                      : "bg-[#131316] text-zinc-500 border border-white/[.07] hover:text-zinc-300"
+                  }`}
+                >
+                  {p === "OPENAI" ? "OpenAI" : "Gemini"}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         <button

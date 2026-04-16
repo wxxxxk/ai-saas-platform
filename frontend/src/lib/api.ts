@@ -42,6 +42,7 @@ export type Job = {
   outputPayload: string | null;
   errorMessage: string | null;
   createdAt: string;
+  provider: string; // e.g. "OPENAI" | "GEMINI"
 };
 
 /**
