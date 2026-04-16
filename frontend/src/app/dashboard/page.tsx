@@ -7,6 +7,68 @@ import ModuleCard from "@/components/ModuleCard";
 import TopUpForm from "@/components/TopUpForm";
 import { AuthError, getJobs, getMe, getModules, type AiModule, type Job, type MeResponse } from "@/lib/api";
 
+// ─── 온보딩 배너 — jobs가 0개일 때만 stat grid 대신 표시 ───────────────────────
+//
+// 크레딧 잔액을 기반으로 "텍스트 N회 / 이미지 N회 가능" 계산값을 보여주고
+// #modules 앵커로 즉시 행동할 수 있는 CTA를 제공한다.
+
+const TEXT_COST  = 10;
+const IMAGE_COST = 30;
+
+function WelcomeBanner({ creditBalance }: { creditBalance: number }) {
+  const textCount  = Math.floor(creditBalance / TEXT_COST);
+  const imageCount = Math.floor(creditBalance / IMAGE_COST);
+
+  return (
+    <div className="rounded-xl border border-[#9d4edd]/20 bg-[#9d4edd]/[.05] px-6 py-6 space-y-5">
+      {/* 상단: 인사 + 크레딧 */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-zinc-100">시작할 준비가 됐습니다</p>
+          <p className="text-xs text-zinc-500 leading-relaxed max-w-sm">
+            아래 모듈 카드에서 프롬프트를 입력하고 <strong className="text-zinc-400 font-medium">Generate</strong>를 누르면
+            첫 번째 AI 결과가 즉시 생성됩니다.
+          </p>
+        </div>
+        <div className="shrink-0 rounded-lg border border-[#9d4edd]/25 bg-[#9d4edd]/[.08] px-4 py-3 text-right">
+          <p className="text-xs text-zinc-500">사용 가능한 크레딧</p>
+          <p className="text-2xl font-semibold tabular-nums text-[#e0b6ff] leading-tight">
+            {creditBalance.toLocaleString()}
+            <span className="ml-1 text-sm font-normal text-zinc-500">cr</span>
+          </p>
+        </div>
+      </div>
+
+      {/* 하단: 크레딧으로 가능한 것 + CTA */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-1 border-t border-white/[.05]">
+        <div className="flex items-center gap-5 text-xs text-zinc-500">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+            텍스트 생성
+            <strong className="text-zinc-300 font-semibold tabular-nums">{textCount}회</strong>
+            가능
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shrink-0" />
+            이미지 생성
+            <strong className="text-zinc-300 font-semibold tabular-nums">{imageCount}회</strong>
+            가능
+          </span>
+        </div>
+        <a
+          href="#modules"
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#9d4edd] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8b3ecb] transition-colors"
+        >
+          첫 번째 생성하기
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ─── 공통 카드 컴포넌트 ────────────────────────────────────────────────────────
 
 function StatCard({ label, value }: { label: string; value: number }) {
@@ -103,15 +165,19 @@ export default async function DashboardPage() {
       {/* 사용자 정보 */}
       <UserCard me={me} />
 
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Active Modules" value={activeModules.length} />
-        <StatCard label="Total Jobs" value={jobs.length} />
-        <StatCard label="Completed" value={completedJobs} />
-      </div>
+      {/* 통계 카드 — job이 없을 때는 온보딩 배너로 대체 */}
+      {jobs.length === 0 ? (
+        <WelcomeBanner creditBalance={me.creditBalance} />
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard label="Active Modules" value={activeModules.length} />
+          <StatCard label="Total Jobs" value={jobs.length} />
+          <StatCard label="Completed" value={completedJobs} />
+        </div>
+      )}
 
       {/* 모듈 섹션 */}
-      <section>
+      <section id="modules">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-zinc-50 font-headline">Modules</h1>
           <p className="mt-1 text-sm text-zinc-500">
@@ -163,11 +229,31 @@ export default async function DashboardPage() {
         </div>
 
         {jobs.length === 0 ? (
-          <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-6 py-14 text-center space-y-2">
-            <p className="text-sm font-medium text-zinc-400">아직 실행된 Job이 없습니다.</p>
-            <p className="text-xs text-zinc-600">
-              위 모듈에서 프롬프트를 입력하고 Generate를 눌러보세요.
-            </p>
+          <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-6 py-12 flex flex-col items-center gap-4 text-center">
+            {/* 아이콘 */}
+            <div className="h-11 w-11 rounded-full border border-white/[.08] bg-[#131316] flex items-center justify-center text-zinc-600">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+            </div>
+            {/* 텍스트 */}
+            <div className="space-y-1.5">
+              <p className="text-sm font-semibold text-zinc-300">첫 번째 결과를 만들어 보세요</p>
+              <p className="text-xs text-zinc-600 leading-relaxed max-w-xs">
+                위 모듈 카드에서 프롬프트를 입력하고 Generate를 누르면
+                결과가 여기에 바로 나타납니다.
+              </p>
+            </div>
+            {/* 앵커 CTA */}
+            <a
+              href="#modules"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/[.1] px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/[.04] hover:border-white/[.16] transition-all"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              모듈로 이동
+            </a>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
