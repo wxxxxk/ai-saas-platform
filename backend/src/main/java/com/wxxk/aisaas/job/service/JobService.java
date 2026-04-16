@@ -3,10 +3,12 @@ package com.wxxk.aisaas.job.service;
 import com.wxxk.aisaas.common.exception.EntityNotFoundException;
 import com.wxxk.aisaas.common.exception.InactiveModuleException;
 import com.wxxk.aisaas.credit.service.CreditWalletService;
+import com.wxxk.aisaas.job.dto.CreateJobRequest;
 import com.wxxk.aisaas.job.entity.Job;
 import com.wxxk.aisaas.job.enums.JobStatus;
 import com.wxxk.aisaas.job.repository.JobRepository;
 import com.wxxk.aisaas.module.entity.AiModule;
+import com.wxxk.aisaas.module.enums.AiProvider;
 import com.wxxk.aisaas.module.executor.AiModuleExecutor;
 import com.wxxk.aisaas.module.service.AiModuleService;
 import com.wxxk.aisaas.user.entity.User;
@@ -35,53 +37,60 @@ public class JobService {
      *
      * 크레딧 정책:
      * - 실행 시작 시 차감 (낙관적 차감)
-     * - 실행 실패 시 전액 환불 (API 키 없음 / OpenAI 에러 / executor 미구현 모두 동일)
+     * - 실행 실패 시 전액 환불 (API 키 없음 / AI 에러 / executor 미구현 모두 동일)
      * - 성공 시에만 차감 확정
      *
      * 이유: 실패가 사용자 과실이 아닌 경우(키 미설정, API 에러)에 크레딧을 소모시키지 않기 위함.
      *
-     * ⚠️ 알려진 한계: executor가 동기 HTTP 호출을 포함하므로 DB 커넥션을 OpenAI 대기 시간(수~수십 초)
+     * ⚠️ 알려진 한계: executor가 동기 HTTP 호출을 포함하므로 DB 커넥션을 AI 대기 시간(수~수십 초)
      * 동안 점유한다. 트래픽이 늘어나면 비동기(@Async / 메시지 큐)로 전환이 필요하다.
      */
     @Transactional
-    public Job createJob(UUID userId, UUID moduleId, String inputPayload) {
+    public Job createJob(UUID userId, CreateJobRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
 
-        AiModule module = aiModuleService.getModuleById(moduleId);
+        AiModule module = aiModuleService.getModuleById(request.getModuleId());
 
         if (!module.isActive()) {
             throw new InactiveModuleException(module.getName());
         }
 
-        // 1단계: 크레딧 차감 (잔액 부족 시 InsufficientCreditException → 422)
+        // 1단계: 공급자 결정 — 현재는 모듈의 defaultProvider를 항상 사용한다.
+        // 향후 request.getProvider() 가 추가되면 resolveProvider 내에서 우선순위를 처리한다.
+        AiProvider resolvedProvider = resolveProvider(module, request);
+
+        // 2단계: 크레딧 차감 (잔액 부족 시 InsufficientCreditException → 422)
         creditWalletService.deduct(userId, module.getCreditCostPerCall());
 
         Job job = Job.builder()
                 .user(user)
                 .module(module)
+                .provider(resolvedProvider)
                 .status(JobStatus.PENDING)
-                .inputPayload(inputPayload)
+                .inputPayload(request.getInputPayload())
                 .creditUsed(module.getCreditCostPerCall())
                 .build();
 
         Job saved = jobRepository.save(job);
 
-        // 2단계: 모듈 executor 탐색 및 실행
+        // 3단계: (moduleName, provider) 쌍으로 executor를 탐색한다.
+        // 이 방식으로 동일 모듈에 대해 공급자별 executor가 공존할 수 있다.
         Optional<AiModuleExecutor> executor = executors.stream()
-                .filter(e -> e.moduleName().equals(module.getName()))
+                .filter(e -> e.moduleName().equals(module.getName())
+                          && e.provider() == resolvedProvider)
                 .findFirst();
 
         if (executor.isPresent()) {
             executor.get().execute(saved);
         } else {
-            // executor가 없는 모듈(SUMMARIZATION, TRANSLATION 등 미구현): 즉시 실패 처리
-            log.warn("[JobService] No executor found for module: {} (jobId={})", module.getName(), saved.getId());
-            saved.fail("해당 모듈의 실행 기능이 아직 구현되지 않았습니다: " + module.getName());
+            log.warn("[JobService] No executor found for module={} provider={} (jobId={})",
+                    module.getName(), resolvedProvider, saved.getId());
+            saved.fail("해당 모듈/공급자 조합의 실행 기능이 아직 구현되지 않았습니다: "
+                    + module.getName() + " / " + resolvedProvider);
         }
 
-        // 3단계: 실패한 경우 크레딧 환불
-        // 실행 전 차감 → 실패 확인 후 복구 방식으로 일관성 유지
+        // 4단계: 실패한 경우 크레딧 환불
         if (saved.getStatus() == JobStatus.FAILED) {
             creditWalletService.refund(userId, saved.getCreditUsed());
             log.info("[JobService] Credit refunded: userId={} amount={} reason=jobFailed jobId={}",
@@ -89,6 +98,18 @@ public class JobService {
         }
 
         return saved;
+    }
+
+    /**
+     * 사용할 AI 공급자를 결정한다.
+     *
+     * 현재 구현: 항상 module.getDefaultProvider() 를 반환한다.
+     * 향후 확장: request 에 provider 필드가 추가되면 다음 우선순위로 처리한다.
+     *   1. request.getProvider() (사용자 지정)
+     *   2. module.getDefaultProvider() (모듈 기본값)
+     */
+    private AiProvider resolveProvider(AiModule module, CreateJobRequest request) {
+        return module.getDefaultProvider();
     }
 
     /**

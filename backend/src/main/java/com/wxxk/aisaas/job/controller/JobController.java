@@ -35,7 +35,7 @@ public class JobController {
             @Valid @RequestBody CreateJobRequest request, Authentication auth) {
         UUID userId = UUID.fromString(auth.getName());
         JobResponse response = JobResponse.from(
-                jobService.createJob(userId, request.getModuleId(), request.getInputPayload())
+                jobService.createJob(userId, request)
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

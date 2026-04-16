@@ -2,6 +2,7 @@ package com.wxxk.aisaas.module.executor;
 
 import com.wxxk.aisaas.asset.service.AssetService;
 import com.wxxk.aisaas.job.entity.Job;
+import com.wxxk.aisaas.module.enums.AiProvider;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -52,6 +53,11 @@ public class OpenAiTextExecutor implements AiModuleExecutor {
     @Override
     public String moduleName() {
         return "TEXT_GENERATION";
+    }
+
+    @Override
+    public AiProvider provider() {
+        return AiProvider.OPENAI;
     }
 
     @Override
