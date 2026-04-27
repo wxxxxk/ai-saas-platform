@@ -78,6 +78,8 @@ export async function logoutAction(): Promise<void> {
 // ─── Job ───────────────────────────────────────────────────────────────────────
 
 async function parseErrorMessage(res: Response, fallback: string): Promise<string> {
+  // 401 은 Spring Security authenticationEntryPoint 가 반환 — 토큰 만료 또는 미인증
+  if (res.status === 401) return "로그인이 만료되었습니다. 다시 로그인해 주세요.";
   try {
     const body = await res.json();
     if (body.error) return body.error;

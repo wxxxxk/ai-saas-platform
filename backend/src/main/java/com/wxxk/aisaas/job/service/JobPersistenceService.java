@@ -63,12 +63,22 @@ public class JobPersistenceService {
 
     /**
      * executor가 in-memory로 변경한 Job 엔티티를 DB에 반영한다.
-     * merge() 의미론(detached → managed)으로 처리된다.
+     *
+     * save() 는 detached 엔티티를 merge() 한다.
+     * merge() 가 반환하는 managed copy 의 module/user 는 Hibernate 프록시이므로,
+     * 트랜잭션이 끝난 뒤 Controller 에서 getName() 등을 호출하면
+     * LazyInitializationException 이 발생한다.
+     *
+     * 이를 방지하기 위해 save() 직후 findByIdWithJoins() 로 재조회한다.
+     * JOIN FETCH 쿼리가 module 과 user 를 같은 트랜잭션 안에서 완전히 초기화하므로
+     * 반환된 Job 은 세션 종료 후에도 모든 필드를 안전하게 읽을 수 있다.
      */
     @Transactional
     public Job persistResult(Job job) {
-        Job saved = jobRepository.save(job);
-        log.info("[JobPersistence] result: jobId={} status={}", saved.getId(), saved.getStatus());
-        return saved;
+        jobRepository.save(job);
+        Job loaded = jobRepository.findByIdWithJoins(job.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Job", job.getId()));
+        log.info("[JobPersistence] result: jobId={} status={}", loaded.getId(), loaded.getStatus());
+        return loaded;
     }
 }

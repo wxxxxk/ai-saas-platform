@@ -28,8 +28,10 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // login / register는 비인증 허용, me는 인증 필요
+                        // /error: Spring Boot 기본 에러 처리 경로. permitAll 없으면
+                        //         미처리 예외(500) 가 Spring Security 를 거쳐 401 로 둔갑한다.
                         // H2 콘솔은 DevSecurityConfig(@Profile("!prod"))에서 별도 처리
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/health").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/health", "/error").permitAll()
                         // top-up은 결제 게이트 없이 크레딧이 무제한 증가하므로 ADMIN 전용으로 제한한다
                         .requestMatchers(HttpMethod.POST, "/api/credits/top-up").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
