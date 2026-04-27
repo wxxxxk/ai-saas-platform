@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 /**
  * 이미지 저장 버튼.
@@ -44,6 +45,7 @@ export default function DownloadButton({ url, compact = false }: { url: string; 
         })
         .catch(() => {
           setStatus("error");
+          toast.error("이미지 저장에 실패했습니다. 새 탭에서 직접 저장해 주세요.");
           setTimeout(() => setStatus("idle"), 2500);
         });
     } else {

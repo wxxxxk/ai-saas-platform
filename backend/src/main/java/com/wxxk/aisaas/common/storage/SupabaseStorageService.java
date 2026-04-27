@@ -43,6 +43,10 @@ public class SupabaseStorageService {
         if (!isConfigured()) {
             log.warn("[SupabaseStorage] supabase.url 또는 supabase.service.key가 설정되지 않았습니다. " +
                     "이미지 생성 결과가 임시 URL로 저장되어 약 1시간 후 만료됩니다.");
+        } else if (serviceKey != null && !serviceKey.startsWith("eyJ")) {
+            log.warn("[SupabaseStorage] supabase.service.key가 유효한 JWT 형식이 아닙니다 (eyJ로 시작해야 함). " +
+                    "Supabase 대시보드 → Settings → API → service_role key 를 확인하세요. " +
+                    "업로드 실패 시 임시 URL로 fallback됩니다.");
         } else {
             log.info("[SupabaseStorage] configured — url={} bucket={}", supabaseUrl, bucket);
         }

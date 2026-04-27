@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { createJob } from "@/lib/actions";
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -55,7 +56,9 @@ export default function EditPromptForm({
         const jobId = await createJob(moduleId, trimmedPrompt, defaultProvider);
         window.location.assign(`/jobs/${jobId}`);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "생성에 실패했습니다.");
+        const msg = err instanceof Error ? err.message : "생성에 실패했습니다.";
+        setError(msg);
+        toast.error(msg);
       }
     });
   }

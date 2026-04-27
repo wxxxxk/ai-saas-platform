@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { createJob } from "@/lib/actions";
 import type { AiModule } from "@/lib/api";
 
@@ -84,7 +85,9 @@ export default function ModuleCard({ module }: { module: AiModule }) {
       const jobId = await createJob(module.id, needsPrompt ? prompt.trim() : undefined, provider);
       window.location.assign(`/jobs/${jobId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      const msg = e instanceof Error ? e.message : "작업 생성에 실패했습니다.";
+      setError(msg);
+      toast.error(msg);
       setIsPending(false);
     }
   }

@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { Job } from "@/lib/api";
 import { useFavorites, buildGroupKey } from "@/lib/useFavorites";
 import { createJob } from "@/lib/actions";
@@ -434,8 +435,12 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
   function handleQuickRegenerate() {
     if (!job.inputPayload) return;
     startRegenerate(async () => {
-      const jobId = await createJob(job.moduleId, job.inputPayload!, job.provider);
-      window.location.assign(`/jobs/${jobId}`);
+      try {
+        const jobId = await createJob(job.moduleId, job.inputPayload!, job.provider);
+        window.location.assign(`/jobs/${jobId}`);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "재생성에 실패했습니다.");
+      }
     });
   }
 
@@ -469,7 +474,16 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           headers: { "Cache-Control": "no-cache" },
         });
 
-        if (!res.ok || stopped) return;
+        if (stopped) return;
+
+        if (res.status === 401) {
+          stopped = true;
+          setIsPolling(false);
+          toast.error("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+          return;
+        }
+
+        if (!res.ok) return;
 
         const updated: Job = await res.json();
 

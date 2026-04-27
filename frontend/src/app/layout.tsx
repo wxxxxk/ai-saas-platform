@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Toaster } from "sonner";
 import { getSessionUser } from "@/lib/auth";
 import SideNav from "@/components/SideNav";
 import "./globals.css";
@@ -35,6 +36,16 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} dark h-full antialiased`}
     >
       <body className="min-h-full bg-[#131316] text-[#e4e1e6]">
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          toastOptions={{
+            classNames: {
+              error: "!bg-red-950 !border-red-800/50 !text-red-200",
+              success: "!bg-zinc-900 !border-white/[.08] !text-zinc-100",
+            },
+          }}
+        />
         {user ? (
           <div className="flex min-h-screen">
             <SideNav user={user} />
