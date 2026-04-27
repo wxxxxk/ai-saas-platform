@@ -15,6 +15,19 @@ const PROVIDER_LABELS: Record<string, string> = {
   STABILITY_AI: "Stability",
 };
 
+const EXAMPLE_PROMPTS: Record<string, string[]> = {
+  TEXT_GENERATION: [
+    "AI 서비스의 미래를 5문단으로 설명해줘",
+    "스타트업 랜딩페이지 문구를 작성해줘",
+    "제품 소개글을 전문적인 톤으로 작성해줘",
+  ],
+  IMAGE_GENERATION: [
+    "A cinematic futuristic city at sunset, ultra detailed",
+    "A cute robot assistant in a cozy workspace, 3D render",
+    "Minimal luxury product photo on dark background",
+  ],
+};
+
 const MODULE_META: Record<
   string,
   { label: string; badgeClass: string; accentClass: string; placeholder: string }
@@ -140,25 +153,29 @@ export default function ModuleCard({ module }: { module: AiModule }) {
                 </p>
               )}
             </div>
-            {module.name === "IMAGE_GENERATION" && (
-              <div className="rounded-lg bg-[#131316] border border-white/[.06] px-3 py-2.5 space-y-1.5">
-                <p className="text-xs font-medium text-zinc-500">
-                  안전한 프롬프트 예시
+            {EXAMPLE_PROMPTS[module.name] && !isPending && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 px-0.5">
+                  예시 프롬프트
                 </p>
-                <ul className="space-y-0.5">
-                  {[
-                    "A serene mountain lake at sunrise, photorealistic",
-                    "A cozy coffee shop interior with warm lighting",
-                    "An abstract painting of ocean waves in blue tones",
-                  ].map((ex) => (
-                    <li key={ex} className="text-xs text-zinc-600 truncate">
-                      · {ex}
-                    </li>
+                <div className="flex flex-col gap-0.5">
+                  {EXAMPLE_PROMPTS[module.name].map((ex) => (
+                    <button
+                      key={ex}
+                      type="button"
+                      onClick={() => { setPrompt(ex); setError(null); }}
+                      className="text-left text-xs text-zinc-500 hover:text-zinc-200 hover:bg-white/[.05] rounded-md px-2.5 py-1.5 transition-colors leading-relaxed"
+                    >
+                      <span className="text-zinc-700 mr-1.5">↗</span>
+                      {ex}
+                    </button>
                   ))}
-                </ul>
-                <p className="text-xs text-zinc-600 pt-0.5 border-t border-white/[.05]">
-                  실존 인물·폭력·노골적 표현은 거절될 수 있습니다.
-                </p>
+                </div>
+                {module.name === "IMAGE_GENERATION" && (
+                  <p className="text-[10px] text-zinc-700 px-2.5 pt-1">
+                    실존 인물·폭력·노골적 표현은 거절될 수 있습니다.
+                  </p>
+                )}
               </div>
             )}
           </>

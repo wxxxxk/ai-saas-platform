@@ -53,6 +53,26 @@ const PROVIDER_LABEL: Record<string, string> = {
   STABILITY_AI: "Stability AI",
 };
 
+// ─── 생성 단계 메시지 ────────────────────────────────────────────────────────────
+// RUNNING 상태에서 2.5초마다 순환 표시할 진행 안내 문구.
+
+const GENERATION_STEPS: Record<string, string[]> = {
+  IMAGE_GENERATION: [
+    "프롬프트 분석 중",
+    "스타일 방향 설정 중",
+    "OpenAI에 생성 요청 중",
+    "이미지 처리 중",
+  ],
+  TEXT_GENERATION: [
+    "프롬프트 분석 중",
+    "문장 구조 설계 중",
+    "OpenAI에 생성 요청 중",
+    "결과 정리 중",
+  ],
+};
+
+const STEP_INTERVAL_MS = 2_500;
+
 // ─── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
@@ -108,16 +128,33 @@ function SidebarSection({
 }
 
 // ─── 진행 중 표시 ─────────────────────────────────────────────────────────────
-// "새로고침" 링크 대신 자동 업데이트 안내 메시지를 표시한다.
+// RUNNING 상태에서 생성 단계를 2.5초마다 순환 표시한다.
 
 function InProgressSection({
   status,
   isPolling,
+  moduleName,
 }: {
   status: string;
   isPolling: boolean;
+  moduleName?: string;
 }) {
   const isRunning = status === "RUNNING";
+  const steps =
+    (moduleName && GENERATION_STEPS[moduleName]) ??
+    ["요청 처리 중", "AI 분석 중", "결과 생성 중", "마무리 중"];
+
+  const [stepIdx, setStepIdx] = useState(0);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const id = setInterval(
+      () => setStepIdx((i) => (i + 1) % steps.length),
+      STEP_INTERVAL_MS
+    );
+    return () => clearInterval(id);
+  }, [isRunning, steps.length]);
+
   return (
     <div
       className={`rounded-xl border p-8 flex flex-col items-center gap-5 text-center transition-colors duration-500 ${
@@ -126,14 +163,23 @@ function InProgressSection({
           : "border-white/[.08] bg-[#1b1b1e]"
       }`}
     >
-      <span
-        className={`h-10 w-10 rounded-full border-[3px] animate-spin ${
-          isRunning
-            ? "border-blue-900 border-t-blue-400"
-            : "border-zinc-800 border-t-zinc-500"
-        }`}
-      />
-      <div className="space-y-1.5">
+      {/* 스피너 */}
+      <div className="relative">
+        <span
+          className={`h-12 w-12 rounded-full border-[3px] animate-spin block ${
+            isRunning
+              ? "border-blue-900 border-t-blue-400"
+              : "border-zinc-800 border-t-zinc-500"
+          }`}
+        />
+        {isRunning && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="h-2 w-2 rounded-full bg-blue-400/50 animate-pulse" />
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-2">
         <p
           className={`text-sm font-semibold ${
             isRunning ? "text-blue-300" : "text-zinc-300"
@@ -141,12 +187,21 @@ function InProgressSection({
         >
           {isRunning ? "AI가 콘텐츠를 생성하고 있습니다" : "처리 대기 중입니다"}
         </p>
+
+        {/* 단계 안내 — RUNNING 상태에서만 표시 */}
+        {isRunning && (
+          <p className="text-xs font-medium text-blue-400/60">
+            ↻ {steps[stepIdx]}…
+          </p>
+        )}
+
         <p className="text-xs text-zinc-600 leading-relaxed max-w-xs">
           {isRunning
             ? "완료되면 결과가 이 페이지에 자동으로 표시됩니다."
             : "요청이 접수되었습니다. 처리가 곧 시작됩니다."}
         </p>
       </div>
+
       {isPolling && (
         <div className="flex items-center gap-2 text-xs text-blue-400/70">
           <span className="relative flex h-1.5 w-1.5">
@@ -625,7 +680,11 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
             </SectionLabel>
 
             {isInProgress && (
-              <InProgressSection status={job.status} isPolling={isPolling} />
+              <InProgressSection
+                status={job.status}
+                isPolling={isPolling}
+                moduleName={job.moduleName}
+              />
             )}
 
             {isFailed && (
@@ -671,11 +730,16 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
               <div
                 className={`rounded-xl border p-5 transition-all duration-700 ${
                   justCompleted
-                    ? "border-green-800/40 bg-green-950/10"
+                    ? "border-green-700/50 bg-green-950/15 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
                     : "border-white/[.08] bg-[#1b1b1e]"
                 }`}
               >
-                <ImagePreview src={job.outputPayload!} />
+                {/* overflow-hidden + scale으로 이미지 hover 줌 효과 */}
+                <div className="overflow-hidden rounded-lg">
+                  <div className="transition-transform duration-500 ease-out hover:scale-[1.03] origin-center">
+                    <ImagePreview src={job.outputPayload!} />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -750,6 +814,24 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           relatedJobs={relatedJobs}
           favoritesApi={{ isFavorite, toggleFavorite }}
         />
+      )}
+
+      {/* ── 생성 완료 배너 — COMPLETED 전환 후 2초간 표시 ── */}
+      {justCompleted && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+          <div className="flex items-center gap-2.5 rounded-full border border-green-700/50 bg-green-950/90 px-5 py-2.5 text-sm font-semibold text-green-300 shadow-2xl backdrop-blur-sm">
+            <svg
+              className="h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            생성이 완료되었습니다
+          </div>
+        </div>
       )}
 
     </div>
