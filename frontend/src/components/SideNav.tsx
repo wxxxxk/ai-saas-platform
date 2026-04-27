@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useTransition, useState } from "react";
 import { logoutAction } from "@/lib/actions";
 import type { SessionUser } from "@/lib/auth";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -37,7 +38,7 @@ export default function SideNav({ user }: { user: SessionUser }) {
   return (
     <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col border-r border-white/[.08] bg-[#1b1b1e] z-20">
       {/* Brand — links to home page */}
-      <div className="px-5 h-14 flex items-center border-b border-white/[.08] shrink-0">
+      <div className="px-5 h-14 flex items-center justify-between border-b border-white/[.08] shrink-0">
         <Link
           href="/"
           prefetch={false}
@@ -45,6 +46,7 @@ export default function SideNav({ user }: { user: SessionUser }) {
         >
           AI Studio
         </Link>
+        <ThemeToggle />
       </div>
 
       {/* Navigation */}

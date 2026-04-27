@@ -33,9 +33,18 @@ export default async function RootLayout({
   return (
     <html
       lang="ko"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full bg-[#131316] text-[#e4e1e6]">
+      <head>
+        {/* FOUC prevention: remove `dark` class before first paint if user chose light mode */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.remove('dark');}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-full">
         <Toaster
           position="bottom-right"
           theme="dark"

@@ -1,6 +1,26 @@
 @import "tailwindcss";
 
+/* Class-based dark mode — responds to `dark` class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light mode (default) */
 :root {
+  --background: #f4f4f6;
+  --foreground: #18181b;
+  --surface: #f4f4f6;
+  --surface-low: #ffffff;
+  --surface-container: #ebebee;
+  --surface-high: #e2e2e6;
+  --surface-highest: #d8d8dc;
+  --primary: #9d4edd;
+  --primary-light: #7c23c0;
+  --on-primary: #ffffff;
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode */
+.dark {
   --background: #131316;
   --foreground: #e4e1e6;
   --surface: #131316;

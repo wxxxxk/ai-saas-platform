@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { createJob } from "@/lib/actions";
 import type { AiModule } from "@/lib/api";
+import Tooltip from "@/components/Tooltip";
 
 const PROMPT_MODULES = new Set(["TEXT_GENERATION", "IMAGE_GENERATION"]);
 
@@ -205,6 +206,10 @@ export default function ModuleCard({ module }: { module: AiModule }) {
         )}
 
         <div className="space-y-2">
+          <Tooltip
+            text={!module.active ? "비활성 모듈" : needsPrompt ? "AI로 콘텐츠 생성" : "모듈 실행"}
+            block
+          >
           <button
             type="submit"
             disabled={isPending || !module.active}
@@ -223,6 +228,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
               "Run"
             )}
           </button>
+          </Tooltip>
 
           {/* 크레딧 소모 안내 — 활성 상태이고 대기 중이 아닐 때 */}
           {module.active && !isPending && (

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createJob } from "@/lib/actions";
+import Tooltip from "@/components/Tooltip";
 
 interface Props {
   moduleId: string;
@@ -31,26 +32,28 @@ export default function RegenerateButton({ moduleId, prompt, creditCost }: Props
 
   return (
     <div className="space-y-1.5">
-      <button
-        type="button"
-        onClick={handleRegenerate}
-        disabled={isPending}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[#9d4edd]/40 bg-[#9d4edd]/10 px-3 py-1.5 text-xs font-medium text-[#e0b6ff] hover:bg-[#9d4edd]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-      >
-        {isPending ? (
-          <>
-            <span className="h-3 w-3 animate-spin rounded-full border border-purple-500 border-t-purple-200" />
-            생성 중…
-          </>
-        ) : (
-          <>
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            재생성 ({creditCost} cr)
-          </>
-        )}
-      </button>
+      <Tooltip text="동일한 프롬프트로 재생성">
+        <button
+          type="button"
+          onClick={handleRegenerate}
+          disabled={isPending}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#9d4edd]/40 bg-[#9d4edd]/10 px-3 py-1.5 text-xs font-medium text-[#e0b6ff] hover:bg-[#9d4edd]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {isPending ? (
+            <>
+              <span className="h-3 w-3 animate-spin rounded-full border border-purple-500 border-t-purple-200" />
+              생성 중…
+            </>
+          ) : (
+            <>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              재생성 ({creditCost} cr)
+            </>
+          )}
+        </button>
+      </Tooltip>
 
       {errorMsg && (
         <p className="text-xs text-red-400">{errorMsg}</p>

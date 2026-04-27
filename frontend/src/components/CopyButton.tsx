@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Tooltip from "@/components/Tooltip";
 
 interface Props {
   text: string;
@@ -19,15 +20,17 @@ export default function CopyButton({ text, className }: Props) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className={
-        className ??
-        "shrink-0 rounded-lg border border-white/[.08] bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors"
-      }
-    >
-      {copied ? "✓ 복사됨" : "복사"}
-    </button>
+    <Tooltip text={copied ? "복사됨!" : "클립보드에 복사"}>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className={
+          className ??
+          "shrink-0 rounded-lg border border-white/[.08] bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors"
+        }
+      >
+        {copied ? "✓ 복사됨" : "복사"}
+      </button>
+    </Tooltip>
   );
 }

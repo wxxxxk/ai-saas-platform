@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import JobCard from "@/components/JobCard";
 import ModuleCard from "@/components/ModuleCard";
 import TopUpForm from "@/components/TopUpForm";
+import OnboardingBanner from "@/components/OnboardingBanner";
 import { AuthError, getJobs, getMe, getModules, type AiModule, type Job, type MeResponse } from "@/lib/api";
 
 // ─── 온보딩 배너 — jobs가 0개일 때만 stat grid 대신 표시 ───────────────────────
@@ -161,6 +162,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+
+      {/* 첫 방문 온보딩 안내 — localStorage로 1회만 표시 */}
+      <OnboardingBanner />
 
       {/* 사용자 정보 */}
       <UserCard me={me} />
