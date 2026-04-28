@@ -20,7 +20,21 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm space-y-4">
+
+        {/* Back to home */}
+        <div className="text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            홈으로
+          </Link>
+        </div>
+
         {/* Card */}
         <div className="rounded-2xl border border-border bg-surface-low p-8 space-y-6">
           <div className="text-center space-y-1">
