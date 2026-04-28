@@ -30,10 +30,10 @@ const STATUS_CFG: Record<string, { dot: string; label: string; text: string }> =
 };
 
 const MODULE_CFG: Record<string, { label: string; badge: string; topBorder: string }> = {
-  IMAGE_GENERATION: { label: "Image",     badge: "bg-purple-900/40 text-purple-300",   topBorder: "border-t-purple-500/50"  },
-  TEXT_GENERATION:  { label: "Text",      badge: "bg-emerald-900/40 text-emerald-300", topBorder: "border-t-emerald-500/50" },
-  SUMMARIZATION:    { label: "Summary",   badge: "bg-orange-900/40 text-orange-300",   topBorder: "border-t-orange-500/50"  },
-  TRANSLATION:      { label: "Translate", badge: "bg-sky-900/40 text-sky-300",         topBorder: "border-t-sky-500/50"     },
+  IMAGE_GENERATION: { label: "Image",     badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",   topBorder: "border-t-purple-500/50"  },
+  TEXT_GENERATION:  { label: "Text",      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", topBorder: "border-t-emerald-500/50" },
+  SUMMARIZATION:    { label: "Summary",   badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",   topBorder: "border-t-orange-500/50"  },
+  TRANSLATION:      { label: "Translate", badge: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",               topBorder: "border-t-sky-500/50"     },
 };
 
 const COLLAPSED_COUNT = 2;
@@ -112,8 +112,8 @@ function VariationRow({
 
   return (
     <div
-      className={`group/row flex items-center gap-2.5 px-3.5 py-2 rounded-lg transition-colors hover:bg-white/[.025] ${
-        isNewest ? "bg-white/[.016]" : ""
+      className={`group/row flex items-center gap-2.5 px-3.5 py-2 rounded-lg transition-colors hover:bg-black/[.025] dark:hover:bg-white/[.025] ${
+        isNewest ? "bg-black/[.016] dark:bg-white/[.016]" : ""
       } ${
         isSelected ? "bg-amber-500/[.04]" : ""
       }`}
@@ -143,7 +143,7 @@ function VariationRow({
                   ? "border-red-900/40 bg-red-950/20"
                   : job.status === "RUNNING"
                     ? "border-blue-900/40 bg-blue-950/15"
-                    : "border-white/[.06] bg-[#131316]"
+                    : "border-border-faint bg-surface"
             }`}
           >
             {job.status === "RUNNING" || job.status === "PENDING" ? (
@@ -246,7 +246,7 @@ function GroupHeader({
         </span>
 
         <div className="flex-1 min-w-0 space-y-1.5">
-          <p className="text-sm font-medium text-zinc-200 line-clamp-2 leading-snug">
+          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-200 line-clamp-2 leading-snug">
             {group.prompt ?? (
               <span className="italic text-zinc-600">프롬프트 없음</span>
             )}
@@ -256,7 +256,7 @@ function GroupHeader({
 
             {/* Variation count */}
             {count > 1 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-500 bg-zinc-800/60 border border-white/[.06] rounded-full px-2 py-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800/60 border border-border-faint rounded-full px-2 py-0.5">
                 <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
@@ -290,7 +290,7 @@ function GroupHeader({
           <button
             type="button"
             onClick={onToggle}
-            className="shrink-0 mt-0.5 inline-flex items-center gap-1 rounded-lg border border-white/[.07] px-2.5 py-1.5 text-xs text-zinc-500 hover:text-zinc-200 hover:border-white/[.15] transition-all"
+            className="shrink-0 mt-0.5 inline-flex items-center gap-1 rounded-lg border border-border-faint px-2.5 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-black/[.15] dark:hover:border-white/[.15] transition-all"
           >
             <svg
               className={`h-3 w-3 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
@@ -313,8 +313,8 @@ function GroupHeader({
           onClick={onToggleForm}
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
             showForm
-              ? "bg-[#9d4edd]/15 border-[#9d4edd]/40 text-[#e0b6ff]"
-              : "border-white/[.08] text-zinc-500 hover:text-zinc-200 hover:border-white/[.15]"
+              ? "bg-[#9d4edd]/15 border-[#9d4edd]/40 text-primary-light"
+              : "border-border text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-black/[.15] dark:hover:border-white/[.15]"
           }`}
         >
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -341,16 +341,16 @@ export default function VariationGroup({ group }: { group: VariationGroupData })
   const isFavoriteGroup = !!group.prompt;
   const selectedJobId   = isFavoriteGroup ? getFavoriteJobId(group.key) : null;
 
-  const moduleCfg   = MODULE_CFG[group.moduleName] ?? { topBorder: "border-t-zinc-700/50" };
+  const moduleCfg   = MODULE_CFG[group.moduleName] ?? { label: group.moduleName, badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400", topBorder: "border-t-zinc-700/50" };
   const canExpand   = group.jobs.length > COLLAPSED_COUNT;
   const hiddenCount = group.jobs.length - COLLAPSED_COUNT;
 
   return (
     <div
-      className={`rounded-xl border border-t-2 ${moduleCfg.topBorder} bg-[#1b1b1e] overflow-hidden transition-colors duration-300 ${
+      className={`rounded-xl border border-t-2 ${moduleCfg.topBorder} bg-surface-low overflow-hidden transition-colors duration-300 ${
         selectedJobId
           ? "border-amber-500/20"
-          : "border-white/[.08]"
+          : "border-border"
       }`}
     >
       {/* Group header */}
@@ -365,7 +365,7 @@ export default function VariationGroup({ group }: { group: VariationGroupData })
 
       {/* Inline "new variation" form */}
       {showForm && group.prompt && (
-        <div className="mx-4 mb-3 rounded-lg border border-[#9d4edd]/20 bg-[#131316] p-4">
+        <div className="mx-4 mb-3 rounded-lg border border-[#9d4edd]/20 bg-surface p-4">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
             새 변형 생성
           </p>
@@ -378,7 +378,7 @@ export default function VariationGroup({ group }: { group: VariationGroupData })
       )}
 
       {/* Divider */}
-      <div className="mx-4 border-t border-white/[.05]" />
+      <div className="mx-4 border-t border-border-faint" />
 
       {/* Always-visible rows (first COLLAPSED_COUNT) */}
       <div className="py-1.5 space-y-0.5">
@@ -425,7 +425,7 @@ export default function VariationGroup({ group }: { group: VariationGroupData })
 
       {/* Expand / collapse footer */}
       {canExpand && (
-        <div className="border-t border-white/[.04] px-4 py-2.5">
+        <div className="border-t border-border-faint px-4 py-2.5">
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}

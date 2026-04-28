@@ -26,7 +26,7 @@ export default function CopyButton({ text, className }: Props) {
         onClick={handleCopy}
         className={
           className ??
-          "shrink-0 rounded-lg border border-white/[.08] bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors"
+          "shrink-0 rounded-lg border border-border bg-surface-high dark:bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-100 hover:bg-surface-highest dark:hover:bg-zinc-700/60 transition-colors"
         }
       >
         {copied ? "✓ 복사됨" : "복사"}

@@ -7,18 +7,18 @@ import RegenerateButton from "./RegenerateButton";
 // ─── 상태 / 모듈 설정 ─────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { dot: string; badge: string; label: string }> = {
-  PENDING:   { dot: "bg-zinc-500",                      badge: "bg-zinc-800 text-zinc-400",        label: "대기 중"  },
-  RUNNING:   { dot: "bg-blue-400 animate-pulse",        badge: "bg-blue-900/40 text-blue-400",     label: "생성 중"  },
-  COMPLETED: { dot: "bg-green-500",                     badge: "bg-green-900/40 text-green-400",   label: "완료"     },
-  FAILED:    { dot: "bg-red-500",                       badge: "bg-red-900/40 text-red-400",       label: "실패"     },
-  CANCELLED: { dot: "bg-zinc-600",                      badge: "bg-zinc-800 text-zinc-500",        label: "취소됨"   },
+  PENDING:   { dot: "bg-zinc-500",               badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",            label: "대기 중"  },
+  RUNNING:   { dot: "bg-blue-400 animate-pulse", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400",         label: "생성 중"  },
+  COMPLETED: { dot: "bg-green-500",              badge: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",     label: "완료"     },
+  FAILED:    { dot: "bg-red-500",                badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400",             label: "실패"     },
+  CANCELLED: { dot: "bg-zinc-600",               badge: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500",            label: "취소됨"   },
 };
 
 const MODULE_CONFIG: Record<string, { badge: string; label: string; accent: string }> = {
-  IMAGE_GENERATION: { badge: "bg-purple-900/40 text-purple-300",  label: "Image",    accent: "border-t-purple-500"  },
-  TEXT_GENERATION:  { badge: "bg-emerald-900/40 text-emerald-300", label: "Text",    accent: "border-t-emerald-500" },
-  SUMMARIZATION:    { badge: "bg-orange-900/40 text-orange-300",  label: "Summary",  accent: "border-t-orange-500"  },
-  TRANSLATION:      { badge: "bg-sky-900/40 text-sky-300",        label: "Translate", accent: "border-t-sky-500"    },
+  IMAGE_GENERATION: { badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",   label: "Image",    accent: "border-t-purple-500"  },
+  TEXT_GENERATION:  { badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", label: "Text",   accent: "border-t-emerald-500" },
+  SUMMARIZATION:    { badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",   label: "Summary",  accent: "border-t-orange-500"  },
+  TRANSLATION:      { badge: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",               label: "Translate", accent: "border-t-sky-500"    },
 };
 
 function formatDate(iso: string) {
@@ -50,8 +50,8 @@ function ContentPreview({ job }: { job: Job }) {
       );
     }
     return (
-      <div className="rounded-lg bg-[#131316] border border-white/[.05] px-3 py-2.5 h-[6.5rem] overflow-hidden">
-        <p className="text-xs text-zinc-400 leading-relaxed line-clamp-4">
+      <div className="rounded-lg bg-surface border border-border-faint px-3 py-2.5 h-[6.5rem] overflow-hidden">
+        <p className="text-xs text-zinc-500 leading-relaxed line-clamp-4">
           {job.outputPayload}
         </p>
       </div>
@@ -75,7 +75,7 @@ function ContentPreview({ job }: { job: Job }) {
   // PENDING / RUNNING — animated loader
   const isRunning = job.status === "RUNNING";
   return (
-    <div className="rounded-lg border border-white/[.05] bg-[#131316] h-[6.5rem] flex flex-col items-center justify-center gap-2.5">
+    <div className="rounded-lg border border-border-faint bg-surface h-[6.5rem] flex flex-col items-center justify-center gap-2.5">
       <span
         className={`h-5 w-5 rounded-full border-2 shrink-0 animate-spin ${
           isRunning
@@ -107,7 +107,7 @@ function CardActions({ job }: { job: Job }) {
 
   return (
     <div className="px-4 pb-4">
-      <div className="border-t border-white/[.06] pt-3 flex items-center gap-1.5 flex-wrap">
+      <div className="border-t border-border-faint pt-3 flex items-center gap-1.5 flex-wrap">
         {isComplete && hasOutput && !isImage && (
           <CopyButton text={job.outputPayload!} />
         )}
@@ -146,9 +146,9 @@ export default function JobCard({ job }: { job: Job }) {
   return (
     <div
       className={`
-        flex flex-col rounded-xl border border-white/[.08] border-t-2 ${moduleCfg.accent}
-        bg-[#1b1b1e] overflow-hidden
-        hover:border-white/[.14] hover:bg-[#1e1e22]
+        flex flex-col rounded-xl border border-border border-t-2 ${moduleCfg.accent}
+        bg-surface-low overflow-hidden
+        hover:border-black/[.14] dark:hover:border-white/[.14] hover:bg-surface-container
         transition-all duration-150
       `}
     >

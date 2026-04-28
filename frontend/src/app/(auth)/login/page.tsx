@@ -22,33 +22,33 @@ export default function LoginPage() {
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="w-full max-w-sm">
         {/* Card */}
-        <div className="rounded-2xl border border-white/[.1] bg-[#1b1b1e] p-8 space-y-6">
+        <div className="rounded-2xl border border-border bg-surface-low p-8 space-y-6">
           <div className="text-center space-y-1">
-            <h1 className="text-2xl font-semibold text-zinc-50 font-headline">로그인</h1>
-            <p className="text-sm text-zinc-400">AI Studio에 오신 것을 환영합니다.</p>
+            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 font-headline">로그인</h1>
+            <p className="text-sm text-zinc-500">AI Studio에 오신 것을 환영합니다.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">이메일</label>
+              <label className="text-xs font-medium text-zinc-500">이메일</label>
               <input
                 type="email"
                 name="email"
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-white/[.12] bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">비밀번호</label>
+              <label className="text-xs font-medium text-zinc-500">비밀번호</label>
               <input
                 type="password"
                 name="password"
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-white/[.12] bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
               />
             </div>
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-zinc-500">
             계정이 없으신가요?{" "}
-            <Link href="/register" className="font-medium text-zinc-200 hover:underline">
+            <Link href="/register" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">
               회원가입
             </Link>
           </p>

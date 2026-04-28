@@ -11,7 +11,7 @@ import CopyButton from "./CopyButton";
 interface Props {
   currentJob: Job;
   relatedJobs: Job[]; // same prompt + module, different ID, latest-first, max 9
-  favoritesApi?: FavoritesApi; // optional — enables star UI across all views
+  favoritesApi?: FavoritesApi;
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ function StarIcon({ filled, className }: { filled: boolean; className?: string }
   );
 }
 
-// ─── Star button (reusable across views) ─────────────────────────────────────
+// ─── Star button ──────────────────────────────────────────────────────────────
 
 function StarButton({
   isSelected,
@@ -88,9 +88,6 @@ function StarButton({
 }
 
 // ─── Text comparison ──────────────────────────────────────────────────────────
-//
-// Default: compact list with chip-selector toggle buttons.
-// When a comparison target is active: side-by-side split view.
 
 function TextComparison({
   current,
@@ -135,10 +132,10 @@ function TextComparison({
               title={canCompare ? "이 버전과 비교" : "완료된 결과만 비교할 수 있습니다"}
               className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                 isActive
-                  ? "border-[#9d4edd]/50 bg-[#9d4edd]/10 text-[#e0b6ff]"
+                  ? "border-[#9d4edd]/50 bg-[#9d4edd]/10 text-primary-light"
                   : canCompare
-                    ? "border-white/[.08] bg-[#131316] text-zinc-400 hover:border-white/[.15] hover:text-zinc-200"
-                    : "border-white/[.04] bg-transparent text-zinc-700 opacity-50 cursor-not-allowed"
+                    ? "border-border bg-surface text-zinc-500 hover:border-black/[.15] dark:hover:border-white/[.15] hover:text-zinc-700 dark:hover:text-zinc-200"
+                    : "border-border-faint bg-transparent text-zinc-500 opacity-50 cursor-not-allowed"
               }`}
             >
               <StatusDot status={job.status} />
@@ -167,7 +164,7 @@ function TextComparison({
           {/* LEFT — current (pinned) */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-300">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
                 <span className="h-2 w-2 rounded-full bg-[#9d4edd]/60" />
                 현재 버전
                 {isSelected(current.id) && (
@@ -189,10 +186,10 @@ function TextComparison({
               className={`rounded-xl border-2 p-4 min-h-[180px] max-h-80 overflow-y-auto transition-colors ${
                 isSelected(current.id)
                   ? "border-amber-500/30 bg-amber-950/10"
-                  : "border-[#9d4edd]/25 bg-[#131316]"
+                  : "border-[#9d4edd]/25 bg-surface"
               }`}
             >
-              <p className="text-sm text-zinc-200 whitespace-pre-wrap leading-7">
+              <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-7">
                 {current.outputPayload ?? ""}
               </p>
             </div>
@@ -219,7 +216,7 @@ function TextComparison({
                 <Link
                   href={`/jobs/${target.id}`}
                   prefetch={false}
-                  className="text-xs text-zinc-600 hover:text-zinc-300 transition-colors"
+                  className="text-xs text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
                 >
                   상세 보기 →
                 </Link>
@@ -229,18 +226,18 @@ function TextComparison({
               className={`rounded-xl border p-4 min-h-[180px] max-h-80 overflow-y-auto transition-colors ${
                 isSelected(target.id)
                   ? "border-amber-500/25 bg-amber-950/10"
-                  : "border-white/[.08] bg-[#131316]"
+                  : "border-border bg-surface"
               }`}
             >
               {target.status === "COMPLETED" && target.outputPayload ? (
-                <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-7">
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 whitespace-pre-wrap leading-7">
                   {target.outputPayload}
                 </p>
               ) : target.status === "FAILED" ? (
                 <p className="text-xs text-red-400 leading-relaxed">생성에 실패한 결과입니다.</p>
               ) : (
                 <div className="flex items-center gap-2 text-xs text-zinc-600">
-                  <span className="h-3 w-3 animate-spin rounded-full border border-zinc-700 border-t-zinc-500" />
+                  <span className="h-3 w-3 animate-spin rounded-full border border-zinc-300 dark:border-zinc-700 border-t-zinc-500" />
                   처리 중…
                 </div>
               )}
@@ -250,14 +247,14 @@ function TextComparison({
         </div>
       ) : (
 
-        <div className="rounded-xl border border-white/[.08] bg-[#131316] overflow-hidden divide-y divide-white/[.04]">
+        <div className="rounded-xl border border-border bg-surface overflow-hidden divide-y divide-black/[.04] dark:divide-white/[.04]">
           {related.map((job) => {
             const canCompare = job.status === "COMPLETED" && !!job.outputPayload;
             const selected   = isSelected(job.id);
             return (
               <div
                 key={job.id}
-                className={`group flex items-center gap-3 px-4 py-3 hover:bg-white/[.02] transition-colors ${
+                className={`group flex items-center gap-3 px-4 py-3 hover:bg-black/[.02] dark:hover:bg-white/[.02] transition-colors ${
                   selected ? "bg-amber-500/[.03]" : ""
                 }`}
               >
@@ -285,7 +282,7 @@ function TextComparison({
                   {canCompare && (
                     <button
                       onClick={() => selectTarget(job)}
-                      className="text-xs text-zinc-500 hover:text-[#e0b6ff] transition-colors"
+                      className="text-xs text-zinc-500 hover:text-primary-light transition-colors"
                     >
                       비교하기
                     </button>
@@ -341,12 +338,12 @@ function ImageGallery({
 
             {/* Thumbnail */}
             <div
-              className={`relative rounded-lg overflow-hidden aspect-square bg-zinc-900 border-2 transition-all ${
+              className={`relative rounded-lg overflow-hidden aspect-square bg-zinc-200 dark:bg-zinc-900 border-2 transition-all ${
                 selected
                   ? "border-amber-500/60 ring-1 ring-amber-500/25"
                   : isCurrent
                     ? "border-[#9d4edd]/50 ring-1 ring-[#9d4edd]/25"
-                    : "border-white/[.08] hover:border-white/[.16]"
+                    : "border-border hover:border-black/[.16] dark:hover:border-white/[.16]"
               }`}
             >
               {hasImage ? (
@@ -363,7 +360,6 @@ function ImageGallery({
                 </div>
               )}
 
-              {/* Badges: selected takes precedence over "현재" */}
               {selected && (
                 <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-px">
                   <StarIcon filled className="h-2.5 w-2.5 text-white" />
@@ -376,7 +372,6 @@ function ImageGallery({
                 </span>
               )}
 
-              {/* Star toggle — top-right corner */}
               {canSelect && (
                 <button
                   type="button"
@@ -392,7 +387,6 @@ function ImageGallery({
                 </button>
               )}
 
-              {/* Hover overlay link for non-current */}
               {!isCurrent && (
                 <Link
                   href={`/jobs/${job.id}`}
@@ -428,7 +422,7 @@ function ImageGallery({
   );
 }
 
-// ─── Simple list (current job is not yet COMPLETED) ───────────────────────────
+// ─── Simple list ──────────────────────────────────────────────────────────────
 
 function RelatedList({
   related,
@@ -446,14 +440,14 @@ function RelatedList({
   };
 
   return (
-    <div className="rounded-xl border border-white/[.08] bg-[#131316] overflow-hidden divide-y divide-white/[.04]">
+    <div className="rounded-xl border border-border bg-surface overflow-hidden divide-y divide-black/[.04] dark:divide-white/[.04]">
       {related.map((job) => {
         const canSelect = job.status === "COMPLETED" && !!job.outputPayload && !!groupKey && !!favoritesApi;
         const selected  = isSelected(job.id);
         return (
           <div
             key={job.id}
-            className={`group flex items-center gap-3 px-4 py-3 hover:bg-white/[.02] transition-colors ${
+            className={`group flex items-center gap-3 px-4 py-3 hover:bg-black/[.02] dark:hover:bg-white/[.02] transition-colors ${
               selected ? "bg-amber-500/[.03]" : ""
             }`}
           >
@@ -496,12 +490,10 @@ export default function RelatedResults({ currentJob, relatedJobs, favoritesApi }
   const isImage       = currentJob.moduleName === "IMAGE_GENERATION";
   const isCurrentDone = currentJob.status === "COMPLETED" && !!currentJob.outputPayload;
 
-  // groupKey — shared by all jobs in this component (same prompt + module)
   const groupKey = currentJob.inputPayload
     ? `${currentJob.moduleName}::${currentJob.inputPayload}`
     : null;
 
-  // Is any job in this family selected?
   const anySelected = !!(
     groupKey &&
     favoritesApi &&
@@ -509,7 +501,7 @@ export default function RelatedResults({ currentJob, relatedJobs, favoritesApi }
   );
 
   return (
-    <section className="rounded-xl border border-white/[.08] bg-[#1b1b1e] p-6 space-y-5">
+    <section className="rounded-xl border border-border bg-surface-low p-6 space-y-5">
 
       {/* Section header */}
       <div className="flex items-start justify-between gap-4">
@@ -517,7 +509,7 @@ export default function RelatedResults({ currentJob, relatedJobs, favoritesApi }
           <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
             같은 아이디어 · 다른 결과
           </p>
-          <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
             {relatedJobs.length}개의 이전 버전
             {anySelected && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/25 rounded-full px-2 py-0.5">
@@ -532,7 +524,7 @@ export default function RelatedResults({ currentJob, relatedJobs, favoritesApi }
               : "같은 프롬프트로 생성된 텍스트 버전들입니다. 비교 후 최적 버전을 선택하세요."}
           </p>
         </div>
-        <span className="shrink-0 text-xs font-medium text-zinc-600 border border-white/[.06] rounded-full px-2.5 py-0.5 tabular-nums">
+        <span className="shrink-0 text-xs font-medium text-zinc-600 border border-border-faint rounded-full px-2.5 py-0.5 tabular-nums">
           {relatedJobs.length}개
         </span>
       </div>

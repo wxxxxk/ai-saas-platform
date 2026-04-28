@@ -72,7 +72,7 @@ export default async function JobDetailPage({
         <Link
           href="/jobs"
           prefetch={false}
-          className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-200 transition-colors group"
+          className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors group"
         >
           <svg
             className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
@@ -106,18 +106,18 @@ function AuthErrorPage() {
       <Link
         href="/jobs"
         prefetch={false}
-        className="text-sm text-zinc-500 hover:text-zinc-200 transition-colors"
+        className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
       >
         ← 히스토리
       </Link>
-      <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-6 py-10 text-center space-y-3">
-        <p className="text-sm font-medium text-zinc-300">접근 권한이 없습니다</p>
+      <div className="rounded-xl border border-border bg-surface-low px-6 py-10 text-center space-y-3">
+        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">접근 권한이 없습니다</p>
         <p className="text-xs text-zinc-600">
           세션이 만료되었거나 이 작업에 접근할 권한이 없습니다.
         </p>
         <Link
           href="/login"
-          className="mt-2 inline-block rounded-lg bg-zinc-800 hover:bg-zinc-700 px-4 py-2 text-xs font-medium text-zinc-200 transition-colors"
+          className="mt-2 inline-block rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 transition-colors"
         >
           다시 로그인
         </Link>

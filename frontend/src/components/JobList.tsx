@@ -42,8 +42,8 @@ function formatDate(iso: string) {
 export default function JobList({ jobs }: { jobs: Job[] }) {
   if (jobs.length === 0) {
     return (
-      <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-6 py-14 text-center">
-        <p className="text-sm font-medium text-zinc-400">
+      <div className="rounded-xl border border-border bg-surface-low px-6 py-14 text-center">
+        <p className="text-sm font-medium text-zinc-500">
           아직 실행된 Job이 없습니다.
         </p>
         <p className="mt-1 text-xs text-zinc-600">
@@ -54,10 +54,10 @@ export default function JobList({ jobs }: { jobs: Job[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/[.08]">
+    <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/[.08] bg-[#1b1b1e] text-left text-xs font-medium text-zinc-500">
+          <tr className="border-b border-border bg-surface-low text-left text-xs font-medium text-zinc-500">
             <th className="px-4 py-3">Module</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Prompt</th>
@@ -66,14 +66,14 @@ export default function JobList({ jobs }: { jobs: Job[] }) {
             <th className="px-4 py-3" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/[.05] bg-[#131316]">
+        <tbody className="divide-y divide-black/[.05] dark:divide-white/[.05] bg-surface">
           {jobs.map((job) => {
             const statusCfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.PENDING;
             return (
               <tr
                 key={job.id}
                 onClick={() => window.location.assign(`/jobs/${job.id}`)}
-                className="hover:bg-white/[.05] transition-colors cursor-pointer"
+                className="hover:bg-black/[.03] dark:hover:bg-white/[.05] transition-colors cursor-pointer"
               >
                 <td className="px-4 py-3">
                   <span

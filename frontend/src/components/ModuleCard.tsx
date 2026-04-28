@@ -108,14 +108,14 @@ export default function ModuleCard({ module }: { module: AiModule }) {
 
   return (
     <div
-      className={`rounded-xl border border-white/[.08] border-t-2 ${meta.accentClass} bg-[#1b1b1e] p-5 flex flex-col gap-4`}
+      className={`rounded-xl border border-border border-t-2 ${meta.accentClass} bg-surface-low p-5 flex flex-col gap-4`}
     >
       {/* 헤더 */}
       <div className="flex items-start justify-between gap-2">
         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.badgeClass}`}>
           {meta.label}
         </span>
-        <span className="shrink-0 rounded-full border border-white/[.08] px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-400">
+        <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-400">
           {module.creditCostPerCall} cr
         </span>
       </div>
@@ -141,10 +141,10 @@ export default function ModuleCard({ module }: { module: AiModule }) {
                 placeholder={meta.placeholder}
                 rows={3}
                 disabled={isPending || !module.active}
-                className={`w-full resize-none rounded-lg border bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 disabled:opacity-50 transition ${
+                className={`w-full resize-none rounded-lg border bg-surface px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 disabled:opacity-50 transition ${
                   error && !isPending
                     ? "border-red-800/60 focus:ring-red-700/40"
-                    : "border-white/[.1] focus:ring-[#9d4edd]/50"
+                    : "border-border focus:ring-[#9d4edd]/50"
                 }`}
               />
               {/* 글자 수 카운터 — 입력 내용이 있을 때만 표시 */}
@@ -165,7 +165,7 @@ export default function ModuleCard({ module }: { module: AiModule }) {
                       key={ex}
                       type="button"
                       onClick={() => { setPrompt(ex); setError(null); }}
-                      className="text-left text-xs text-zinc-500 hover:text-zinc-200 hover:bg-white/[.05] rounded-md px-2.5 py-1.5 transition-colors leading-relaxed"
+                      className="text-left text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-black/[.05] dark:hover:bg-white/[.05] rounded-md px-2.5 py-1.5 transition-colors leading-relaxed"
                     >
                       <span className="text-zinc-700 mr-1.5">↗</span>
                       {ex}
@@ -194,8 +194,8 @@ export default function ModuleCard({ module }: { module: AiModule }) {
                   onClick={() => setProvider(provider === p ? undefined : p)}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${
                     provider === p
-                      ? "bg-[#9d4edd]/20 text-[#e0b6ff] border border-[#9d4edd]/40"
-                      : "bg-[#131316] text-zinc-500 border border-white/[.07] hover:text-zinc-300"
+                      ? "bg-[#9d4edd]/20 text-primary-light border border-[#9d4edd]/40"
+                      : "bg-surface text-zinc-500 border border-border-faint hover:text-zinc-700 dark:hover:text-zinc-300"
                   }`}
                 >
                   {PROVIDER_LABELS[p] ?? p}

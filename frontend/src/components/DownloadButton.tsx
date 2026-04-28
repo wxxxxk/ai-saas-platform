@@ -63,7 +63,7 @@ export default function DownloadButton({ url, compact = false }: { url: string; 
           type="button"
           onClick={handleDownload}
           disabled={status === "pending"}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-white/[.1] bg-white/[.04] px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-white/[.08] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-black/[.04] dark:bg-white/[.04] px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:text-zinc-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {status === "pending" ? (
             <>

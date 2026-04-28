@@ -22,10 +22,10 @@ const FILTER_TABS: { key: FilterKey; label: string }[] = [
 // ─── Module config (local subset for selected cards) ──────────────────────────
 
 const MODULE_CFG_SELECTED: Record<string, { label: string; badge: string; accentFrom: string }> = {
-  IMAGE_GENERATION: { label: "Image",     badge: "bg-purple-900/40 text-purple-300",   accentFrom: "from-purple-500/20"  },
-  TEXT_GENERATION:  { label: "Text",      badge: "bg-emerald-900/40 text-emerald-300", accentFrom: "from-emerald-500/20" },
-  SUMMARIZATION:    { label: "Summary",   badge: "bg-orange-900/40 text-orange-300",   accentFrom: "from-orange-500/20"  },
-  TRANSLATION:      { label: "Translate", badge: "bg-sky-900/40 text-sky-300",         accentFrom: "from-sky-500/20"     },
+  IMAGE_GENERATION: { label: "Image",     badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",   accentFrom: "from-purple-500/20"  },
+  TEXT_GENERATION:  { label: "Text",      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", accentFrom: "from-emerald-500/20" },
+  SUMMARIZATION:    { label: "Summary",   badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",   accentFrom: "from-orange-500/20"  },
+  TRANSLATION:      { label: "Translate", badge: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",               accentFrom: "from-sky-500/20"     },
 };
 
 // ─── Star icon (local copy — used by SelectedCard) ───────────────────────────
@@ -49,7 +49,7 @@ function SelectedCard({ item }: { item: SelectedItem }) {
   const isImage   = job.moduleName === "IMAGE_GENERATION";
   const modCfg    = MODULE_CFG_SELECTED[job.moduleName] ?? {
     label: job.moduleName,
-    badge: "bg-zinc-800 text-zinc-400",
+    badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
     accentFrom: "from-zinc-500/10",
   };
 
@@ -65,7 +65,7 @@ function SelectedCard({ item }: { item: SelectedItem }) {
   })();
 
   return (
-    <div className="group/card flex flex-col rounded-xl border border-amber-500/20 bg-[#1b1b1e] overflow-hidden hover:border-amber-500/40 transition-all duration-200">
+    <div className="group/card flex flex-col rounded-xl border border-amber-500/20 bg-surface-low overflow-hidden hover:border-amber-500/40 transition-all duration-200">
 
       {/* Accent line — module colour bleeds into amber */}
       <div className={`h-px bg-gradient-to-r ${modCfg.accentFrom} via-amber-500/15 to-transparent`} />
@@ -84,7 +84,7 @@ function SelectedCard({ item }: { item: SelectedItem }) {
         </div>
 
         {/* Prompt */}
-        <p className="text-sm font-medium text-zinc-200 line-clamp-2 leading-snug">
+        <p className="text-sm font-medium text-zinc-700 dark:text-zinc-200 line-clamp-2 leading-snug">
           {group.prompt ?? (
             <span className="italic text-zinc-600">프롬프트 없음</span>
           )}
@@ -102,7 +102,7 @@ function SelectedCard({ item }: { item: SelectedItem }) {
             />
           </div>
         ) : job.outputPayload ? (
-          <p className="text-xs text-zinc-400 line-clamp-4 leading-relaxed rounded-lg border border-white/[.04] bg-zinc-900/50 px-3.5 py-3">
+          <p className="text-xs text-zinc-500 line-clamp-4 leading-relaxed rounded-lg border border-border-faint bg-surface px-3.5 py-3">
             {job.outputPayload.slice(0, 220)}
           </p>
         ) : null}
@@ -119,7 +119,7 @@ function SelectedCard({ item }: { item: SelectedItem }) {
           <Link
             href={`/jobs/${job.id}`}
             prefetch={false}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-white/[.08] px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:border-amber-500/30 hover:bg-amber-500/[.04] transition-all"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-100 hover:border-amber-500/30 hover:bg-amber-500/[.04] transition-all"
           >
             워크스페이스 열기
             <span className="text-zinc-600 group-hover/card:text-amber-400 transition-colors">→</span>
@@ -152,7 +152,7 @@ function SelectedEmptyState({ onGoToAll }: { onGoToAll: () => void }) {
       </div>
 
       <div className="space-y-2 max-w-xs">
-        <p className="text-sm font-medium text-zinc-300">아직 선택된 결과가 없습니다</p>
+        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">아직 선택된 결과가 없습니다</p>
         <p className="text-xs text-zinc-600 leading-relaxed">
           각 아이디어의 결과 목록에서 별표(★)를 눌러 최선의 버전을 선택해 두세요.
           선택한 결과들이 여기서 한눈에 모입니다.
@@ -162,7 +162,7 @@ function SelectedEmptyState({ onGoToAll }: { onGoToAll: () => void }) {
       <button
         type="button"
         onClick={onGoToAll}
-        className="inline-flex items-center gap-2 rounded-lg border border-white/[.1] px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:border-white/[.2] transition-all"
+        className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-100 hover:border-black/[.2] dark:hover:border-white/[.2] transition-all"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -277,7 +277,7 @@ function sectionByTime(groups: VariationGroupData[]): TimeSection[] {
 function EmptyState({ isFiltered }: { isFiltered: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
-      <div className="rounded-full bg-zinc-800/60 p-5">
+      <div className="rounded-full bg-zinc-100 dark:bg-zinc-800/60 p-5">
         <svg
           className="h-8 w-8 text-zinc-600"
           fill="none"
@@ -294,12 +294,12 @@ function EmptyState({ isFiltered }: { isFiltered: boolean }) {
       </div>
       {isFiltered ? (
         <>
-          <p className="text-sm font-medium text-zinc-400">해당 상태의 항목이 없습니다.</p>
+          <p className="text-sm font-medium text-zinc-500">해당 상태의 항목이 없습니다.</p>
           <p className="text-xs text-zinc-600">다른 필터를 선택해 보세요.</p>
         </>
       ) : (
         <>
-          <p className="text-sm font-medium text-zinc-400">아직 생성한 결과가 없습니다.</p>
+          <p className="text-sm font-medium text-zinc-500">아직 생성한 결과가 없습니다.</p>
           <p className="text-xs text-zinc-600">
             대시보드에서 모듈을 선택하고 첫 번째 콘텐츠를 만들어 보세요.
           </p>
@@ -311,9 +311,9 @@ function EmptyState({ isFiltered }: { isFiltered: boolean }) {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-4 py-3 space-y-0.5">
+    <div className="rounded-xl border border-border bg-surface-low px-4 py-3 space-y-0.5">
       <p className="text-xs text-zinc-500">{label}</p>
-      <p className="text-base font-semibold text-zinc-100 tabular-nums">{value}</p>
+      <p className="text-base font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">{value}</p>
     </div>
   );
 }
@@ -325,7 +325,7 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
         {label}
       </h3>
       <span className="text-xs text-zinc-700 tabular-nums shrink-0">{count}</span>
-      <div className="flex-1 border-t border-white/[.05]" />
+      <div className="flex-1 border-t border-border-faint" />
     </div>
   );
 }
@@ -396,7 +396,7 @@ export default function JobHistoryView({ jobs }: { jobs: Job[] }) {
       </div>
 
       {/* ── Filter tabs ── */}
-      <div className="flex items-center gap-1 border-b border-white/[.08] overflow-x-auto">
+      <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
         {FILTER_TABS.map(({ key, label }) => {
           const isSelected = key === "SELECTED";
           const count      = isSelected
@@ -414,7 +414,7 @@ export default function JobHistoryView({ jobs }: { jobs: Job[] }) {
                   ? isSelected
                     ? "border-amber-500 text-amber-300"
                     : "border-[#9d4edd] text-[#e0b6ff]"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
+                  : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
               }`}
             >
               {isSelected && (

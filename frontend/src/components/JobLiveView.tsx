@@ -27,23 +27,23 @@ import RelatedResults from "./RelatedResults";
 
 const POLL_INTERVAL_MS  = 3_000;
 const ACTIVE_STATUSES   = new Set(["PENDING", "RUNNING"]);
-const HIGHLIGHT_MS      = 2_000; // COMPLETED 전환 후 하이라이트 지속 시간
+const HIGHLIGHT_MS      = 2_000;
 
 // ─── 스타일 설정 ────────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<string, { dot: string; badge: string; label: string }> = {
-  PENDING:   { dot: "bg-zinc-500",               badge: "bg-zinc-800 text-zinc-400",        label: "대기 중" },
-  RUNNING:   { dot: "bg-blue-400 animate-pulse", badge: "bg-blue-900/40 text-blue-400",     label: "생성 중" },
-  COMPLETED: { dot: "bg-green-500",              badge: "bg-green-900/40 text-green-400",   label: "완료"    },
-  FAILED:    { dot: "bg-red-500",                badge: "bg-red-900/40 text-red-400",       label: "실패"    },
-  CANCELLED: { dot: "bg-zinc-600",               badge: "bg-zinc-800 text-zinc-500",        label: "취소됨"  },
+  PENDING:   { dot: "bg-zinc-500",               badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",        label: "대기 중" },
+  RUNNING:   { dot: "bg-blue-400 animate-pulse", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400",     label: "생성 중" },
+  COMPLETED: { dot: "bg-green-500",              badge: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400", label: "완료"    },
+  FAILED:    { dot: "bg-red-500",                badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400",         label: "실패"    },
+  CANCELLED: { dot: "bg-zinc-600",               badge: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500",        label: "취소됨"  },
 };
 
 const MODULE_STYLE: Record<string, { badge: string; label: string }> = {
-  IMAGE_GENERATION: { badge: "bg-purple-900/40 text-purple-300",  label: "Image Generation" },
-  TEXT_GENERATION:  { badge: "bg-emerald-900/40 text-emerald-300", label: "Text Generation"  },
-  SUMMARIZATION:    { badge: "bg-orange-900/40 text-orange-300",  label: "Summarization"    },
-  TRANSLATION:      { badge: "bg-sky-900/40 text-sky-300",        label: "Translation"      },
+  IMAGE_GENERATION: { badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",   label: "Image Generation" },
+  TEXT_GENERATION:  { badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", label: "Text Generation"  },
+  SUMMARIZATION:    { badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",   label: "Summarization"    },
+  TRANSLATION:      { badge: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",               label: "Translation"      },
 };
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -54,7 +54,6 @@ const PROVIDER_LABEL: Record<string, string> = {
 };
 
 // ─── 생성 단계 메시지 ────────────────────────────────────────────────────────────
-// RUNNING 상태에서 2.5초마다 순환 표시할 진행 안내 문구.
 
 const GENERATION_STEPS: Record<string, string[]> = {
   IMAGE_GENERATION: [
@@ -84,7 +83,6 @@ function formatDate(iso: string) {
 }
 
 // ─── LIVE 인디케이터 ───────────────────────────────────────────────────────────
-// Ping 애니메이션으로 실시간 업데이트 중임을 시각화한다.
 
 function LiveBadge() {
   return (
@@ -118,7 +116,7 @@ function SidebarSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] p-5">
+    <div className="rounded-xl border border-border bg-surface-low p-5">
       <p className="mb-3.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
         {title}
       </p>
@@ -128,7 +126,6 @@ function SidebarSection({
 }
 
 // ─── 진행 중 표시 ─────────────────────────────────────────────────────────────
-// RUNNING 상태에서 생성 단계를 2.5초마다 순환 표시한다.
 
 function InProgressSection({
   status,
@@ -160,16 +157,15 @@ function InProgressSection({
       className={`rounded-xl border p-8 flex flex-col items-center gap-5 text-center transition-colors duration-500 ${
         isRunning
           ? "border-blue-900/40 bg-blue-950/20"
-          : "border-white/[.08] bg-[#1b1b1e]"
+          : "border-border bg-surface-low"
       }`}
     >
-      {/* 스피너 */}
       <div className="relative">
         <span
           className={`h-12 w-12 rounded-full border-[3px] animate-spin block ${
             isRunning
               ? "border-blue-900 border-t-blue-400"
-              : "border-zinc-800 border-t-zinc-500"
+              : "border-zinc-300 dark:border-zinc-800 border-t-zinc-500"
           }`}
         />
         {isRunning && (
@@ -182,13 +178,12 @@ function InProgressSection({
       <div className="space-y-2">
         <p
           className={`text-sm font-semibold ${
-            isRunning ? "text-blue-300" : "text-zinc-300"
+            isRunning ? "text-blue-300" : "text-zinc-600 dark:text-zinc-300"
           }`}
         >
           {isRunning ? "AI가 콘텐츠를 생성하고 있습니다" : "처리 대기 중입니다"}
         </p>
 
-        {/* 단계 안내 — RUNNING 상태에서만 표시 */}
         {isRunning && (
           <p className="text-xs font-medium text-blue-400/60">
             ↻ {steps[stepIdx]}…
@@ -239,7 +234,6 @@ function FailedSection({ errorMessage }: { errorMessage: string | null }) {
 }
 
 // ─── 텍스트 결과 표시 ─────────────────────────────────────────────────────────
-// `highlight` prop으로 COMPLETED 전환 직후 그린 하이라이트를 적용한다.
 
 function TextResultSection({
   text,
@@ -256,25 +250,23 @@ function TextResultSection({
       className={`rounded-xl border p-5 space-y-3 transition-all duration-700 ${
         highlight
           ? "border-green-800/40 bg-green-950/10"
-          : "border-white/[.08] bg-[#1b1b1e]"
+          : "border-border bg-surface-low"
       }`}
     >
-      {/* 액션 헤더 — 통계와 복사 버튼을 결과 텍스트 위에 배치해 즉시 접근 가능하게 한다 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-xs tabular-nums text-zinc-700">
+        <div className="flex items-center gap-3 text-xs tabular-nums text-zinc-500">
           <span>{wordCount.toLocaleString()} 단어</span>
-          <span className="text-zinc-800">·</span>
+          <span className="text-zinc-400 dark:text-zinc-800">·</span>
           <span>{charCount.toLocaleString()} 자</span>
         </div>
         <CopyButton
           text={text}
-          className="inline-flex items-center gap-1.5 rounded-md border border-white/[.08] bg-zinc-800/50 px-2.5 py-1 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-high dark:bg-zinc-800/50 px-2.5 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-100 hover:bg-surface-highest dark:hover:bg-zinc-700/50 transition-colors"
         />
       </div>
 
-      {/* 텍스트 콘텐츠 */}
-      <div className="rounded-lg bg-[#131316] border border-white/[.05] p-5">
-        <p className="text-sm text-zinc-200 whitespace-pre-wrap leading-7">{text}</p>
+      <div className="rounded-lg bg-surface border border-border-faint p-5">
+        <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-7">{text}</p>
       </div>
     </div>
   );
@@ -295,11 +287,11 @@ function SidebarStatus({ job, isPolling }: { job: Job; isPolling: boolean }) {
             className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 animate-spin ${
               isRunning
                 ? "border-blue-900 border-t-blue-400"
-                : "border-zinc-800 border-t-zinc-500"
+                : "border-zinc-300 dark:border-zinc-800 border-t-zinc-500"
             }`}
           />
           <div className="space-y-1">
-            <p className={`text-sm font-semibold ${isRunning ? "text-blue-400" : "text-zinc-300"}`}>
+            <p className={`text-sm font-semibold ${isRunning ? "text-blue-400" : "text-zinc-600 dark:text-zinc-300"}`}>
               {cfg.label}
             </p>
             <p className="text-xs text-zinc-600">
@@ -324,7 +316,7 @@ function SidebarStatus({ job, isPolling }: { job: Job; isPolling: boolean }) {
     <SidebarSection title="상태">
       <div className="flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full shrink-0 ${cfg.dot}`} />
-        <span className="text-sm font-semibold text-zinc-300">{cfg.label}</span>
+        <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">{cfg.label}</span>
       </div>
     </SidebarSection>
   );
@@ -341,7 +333,7 @@ function SidebarActions({ job, isImage }: { job: Job; isImage: boolean }) {
       ) : (
         <CopyButton
           text={job.outputPayload}
-          className="w-full rounded-lg border border-white/[.1] bg-zinc-800/50 px-3 py-2 text-xs font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors text-center"
+          className="w-full rounded-lg border border-border bg-surface-high dark:bg-zinc-800/50 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-surface-highest dark:hover:bg-zinc-700/60 transition-colors text-center"
         />
       )}
     </SidebarSection>
@@ -369,7 +361,7 @@ function SidebarContinue({
         defaultProvider={job.provider}
       />
       {relatedCount > 0 && (
-        <p className="mt-3 text-[11px] leading-relaxed text-zinc-600 border-t border-white/[.05] pt-3">
+        <p className="mt-3 text-[11px] leading-relaxed text-zinc-600 border-t border-border-faint pt-3">
           이 프롬프트로 만든 결과가{" "}
           <span className="font-semibold text-zinc-500">{relatedCount}개</span> 더 있습니다.{" "}
           <span className="text-zinc-600">페이지 아래에서 비교해 보세요 ↓</span>
@@ -380,9 +372,6 @@ function SidebarContinue({
 }
 
 // ─── 사이드바: 결과 선택 (즐겨찾기) ──────────────────────────────────────────
-//
-// localStorage-backed. Amber star = "chosen version" for this prompt family.
-// Renders only when the job is COMPLETED with output AND has a prompt (groupKey exists).
 
 function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
   if (filled) {
@@ -414,7 +403,7 @@ function SidebarFavorite({
         className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
           isSelected
             ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/15"
-            : "border border-white/[.1] text-zinc-400 hover:text-zinc-200 hover:border-white/[.18]"
+            : "border border-border text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-black/[.18] dark:hover:border-white/[.18]"
         }`}
       >
         <StarIcon filled={isSelected} className="h-4 w-4" />
@@ -447,15 +436,15 @@ function SidebarDetails({ job }: { job: Job }) {
       <dl className="space-y-3">
         <div>
           <dt className="text-xs text-zinc-600 mb-0.5">공급자</dt>
-          <dd className="text-xs text-zinc-400">{PROVIDER_LABEL[job.provider] ?? job.provider}</dd>
+          <dd className="text-xs text-zinc-500">{PROVIDER_LABEL[job.provider] ?? job.provider}</dd>
         </div>
         <div>
           <dt className="text-xs text-zinc-600 mb-0.5">생성 시각</dt>
-          <dd className="text-xs text-zinc-400 tabular-nums">{formatDate(job.createdAt)}</dd>
+          <dd className="text-xs text-zinc-500 tabular-nums">{formatDate(job.createdAt)}</dd>
         </div>
         <div>
           <dt className="text-xs text-zinc-600 mb-0.5">소모 크레딧</dt>
-          <dd className="text-xs text-zinc-400 tabular-nums">{job.creditUsed} cr</dd>
+          <dd className="text-xs text-zinc-500 tabular-nums">{job.creditUsed} cr</dd>
         </div>
         <div>
           <dt className="text-xs text-zinc-600 mb-0.5">Job ID</dt>
@@ -486,7 +475,6 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
   const [justCompleted, setJustCompleted] = useState(false);
   const [isRegenerating, startRegenerate] = useTransition();
 
-  // 같은 프롬프트 + 같은 공급자로 새 Job을 생성해 해당 결과 페이지로 이동한다.
   function handleQuickRegenerate() {
     if (!job.inputPayload) return;
     startRegenerate(async () => {
@@ -502,21 +490,13 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
   // ─── Favorites ──────────────────────────────────────────────────────────────
 
   const { isFavorite, toggleFavorite } = useFavorites();
-  // groupKey is null when the job has no prompt (can't be grouped / selected)
   const groupKey = buildGroupKey(job.moduleName, job.inputPayload);
 
   // ─── Polling lifecycle ───────────────────────────────────────────────────────
-  //
-  // 설계 원칙:
-  //  - 마운트 시 1회만 실행 (deps: [])
-  //  - `stopped` 플래그로 언마운트 후 응답이 도착해도 setState 방지
-  //  - 응답 데이터가 실제로 변경된 경우에만 setState → 불필요한 리렌더 방지
-  //  - 네트워크 오류는 무시하고 계속 polling (일시적 장애 허용)
-  //  - terminal 상태 도달 시 interval 즉시 해제
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!ACTIVE_STATUSES.has(initialJob.status)) return; // 이미 완료 상태 — polling 불필요
+    if (!ACTIVE_STATUSES.has(initialJob.status)) return;
 
     let stopped = false;
 
@@ -542,41 +522,38 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
 
         const updated: Job = await res.json();
 
-        // 실제로 변경된 경우에만 setState (불필요한 리렌더 방지)
         setJob((prev) => {
           if (
             prev.status        === updated.status &&
             prev.outputPayload === updated.outputPayload &&
             prev.errorMessage  === updated.errorMessage
           ) {
-            return prev; // 참조 동일 → React가 리렌더 건너뜀
+            return prev;
           }
           return updated;
         });
 
-        // Terminal 상태에 도달하면 polling 중단
         if (!ACTIVE_STATUSES.has(updated.status)) {
           stopped = true;
           setIsPolling(false);
 
           if (updated.status === "COMPLETED") {
-            // COMPLETED 전환 시 결과 섹션에 잠깐 하이라이트 표시
             setJustCompleted(true);
             setTimeout(() => setJustCompleted(false), HIGHLIGHT_MS);
           }
         }
       } catch {
-        // 네트워크 오류 — 재시도 허용, interval 유지
+        // 네트워크 오류 — 재시도 허용
       }
     }
 
     const id = setInterval(poll, POLL_INTERVAL_MS);
 
     return () => {
-      stopped = true;     // in-flight fetch가 완료되어도 setState 차단
+      stopped = true;
       clearInterval(id);
     };
-  }, []); // ← 의도적인 빈 배열: 마운트 시 1회 실행. initialJob.id는 클로저로 캡처 (변경 없음).
+  }, []); // ← 의도적인 빈 배열
 
   // ─── 파생 상태 ──────────────────────────────────────────────────────────────
 
@@ -589,7 +566,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
 
   const statusCfg = STATUS_STYLE[job.status]     ?? STATUS_STYLE.PENDING;
   const moduleCfg = MODULE_STYLE[job.moduleName] ?? {
-    badge: "bg-zinc-800 text-zinc-400",
+    badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
     label: job.moduleName,
   };
 
@@ -608,7 +585,6 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
 
       {/* ── 페이지 헤더 ── */}
       <header className="space-y-2">
-        {/* 배지 행 — 폴링 LIVE 인디케이터 포함 */}
         <div className="flex items-center flex-wrap gap-2">
           <span
             className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${moduleCfg.badge}`}
@@ -622,12 +598,12 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
             {statusCfg.label}
           </span>
           {isPolling && <LiveBadge />}
-          <span className="inline-block rounded-full border border-white/[.08] px-2.5 py-0.5 text-xs font-medium text-zinc-500">
+          <span className="inline-block rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-zinc-500">
             {PROVIDER_LABEL[job.provider] ?? job.provider}
           </span>
         </div>
 
-        <h1 className="text-2xl font-semibold text-zinc-50 font-headline leading-tight">
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 font-headline leading-tight">
           {pageTitle}
         </h1>
 
@@ -645,7 +621,6 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           {/* 프롬프트 */}
           {hasPrompt && (
             <section>
-              {/* 헤더: 섹션 라벨 + 완료 시 수정 바로가기 링크 */}
               <div className="mb-2.5 flex items-center justify-between">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
                   Your Prompt
@@ -653,14 +628,14 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
                 {isCompleted && (
                   <a
                     href="#continue"
-                    className="text-[10px] text-zinc-600 hover:text-zinc-300 transition-colors"
+                    className="text-[10px] text-zinc-600 hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors"
                   >
                     프롬프트 수정 ↓
                   </a>
                 )}
               </div>
-              <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-5 py-4">
-                <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
+              <div className="rounded-xl border border-border bg-surface-low px-5 py-4">
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
                   {job.inputPayload}
                 </p>
               </div>
@@ -695,14 +670,13 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
               <>
                 <TextResultSection text={job.outputPayload!} highlight={justCompleted} />
 
-                {/* 빠른 재생성 — 사이드바 없이 한 번에 새 버전을 만든다 */}
                 {job.inputPayload && (
                   <div className="mt-3 flex items-center gap-3">
                     <button
                       type="button"
                       onClick={handleQuickRegenerate}
                       disabled={isRegenerating}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[.1] px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/[.04] hover:border-white/[.18] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-100 hover:bg-black/[.04] dark:hover:bg-white/[.04] hover:border-black/[.18] dark:hover:border-white/[.18] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isRegenerating ? (
                         <>
@@ -718,7 +692,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
                         </>
                       )}
                     </button>
-                    <span className="text-[10px] text-zinc-700 tabular-nums">
+                    <span className="text-[10px] text-zinc-600 tabular-nums">
                       −{job.creditUsed} cr
                     </span>
                   </div>
@@ -731,10 +705,9 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
                 className={`rounded-xl border p-5 transition-all duration-700 ${
                   justCompleted
                     ? "border-green-700/50 bg-green-950/15 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
-                    : "border-white/[.08] bg-[#1b1b1e]"
+                    : "border-border bg-surface-low"
                 }`}
               >
-                {/* overflow-hidden + scale으로 이미지 hover 줌 효과 */}
                 <div className="overflow-hidden rounded-lg">
                   <div className="transition-transform duration-500 ease-out hover:scale-[1.03] origin-center">
                     <ImagePreview src={job.outputPayload!} />
@@ -744,7 +717,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
             )}
 
             {isCompleted && !job.outputPayload && (
-              <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] px-5 py-8 text-center">
+              <div className="rounded-xl border border-border bg-surface-low px-5 py-8 text-center">
                 <p className="text-sm text-zinc-500">결과 데이터가 없습니다.</p>
               </div>
             )}
@@ -757,7 +730,6 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           <SidebarStatus job={job} isPolling={isPolling} />
           <SidebarActions job={job} isImage={isImage} />
 
-          {/* Result selection — only for COMPLETED jobs with a prompt */}
           {isCompleted && hasOutput && groupKey && (
             <SidebarFavorite
               isSelected={isFavorite(groupKey, job.id)}
@@ -765,7 +737,6 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
             />
           )}
 
-          {/* scroll anchor — "Your Prompt" 섹션의 "프롬프트 수정 ↓" 링크 대상 */}
           {(isCompleted || isFailed) && hasPrompt && (
             <span id="continue" className="sr-only" aria-hidden />
           )}
@@ -790,7 +761,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
           <Link
             href="/jobs"
             prefetch={false}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-white/[.07] bg-transparent px-4 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-200 hover:bg-white/[.04] transition-colors"
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-border-faint bg-transparent px-4 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-black/[.04] dark:hover:bg-white/[.04] transition-colors"
           >
             <svg
               className="h-3.5 w-3.5"
@@ -807,7 +778,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
         </aside>
       </div>
 
-      {/* ── 관련 결과 비교 — polled job 상태 + favorites API 전달 ── */}
+      {/* ── 관련 결과 비교 ── */}
       {relatedJobs.length > 0 && (
         <RelatedResults
           currentJob={job}
@@ -816,7 +787,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
         />
       )}
 
-      {/* ── 생성 완료 배너 — COMPLETED 전환 후 2초간 표시 ── */}
+      {/* ── 생성 완료 배너 ── */}
       {justCompleted && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
           <div className="flex items-center gap-2.5 rounded-full border border-green-700/50 bg-green-950/90 px-5 py-2.5 text-sm font-semibold text-green-300 shadow-2xl backdrop-blur-sm">

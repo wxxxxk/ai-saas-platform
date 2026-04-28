@@ -27,8 +27,8 @@ export default function TopUpForm() {
   }
 
   return (
-    <div className="rounded-xl border border-white/[.08] bg-[#1b1b1e] p-5 max-w-sm space-y-3">
-      <p className="text-sm font-medium text-zinc-300">크레딧 충전</p>
+    <div className="rounded-xl border border-border bg-surface-low p-5 max-w-sm space-y-3">
+      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">크레딧 충전</p>
 
       <div className="flex gap-2">
         {PRESETS.map((preset) => (
@@ -38,8 +38,8 @@ export default function TopUpForm() {
             onClick={() => setAmount(String(preset))}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium tabular-nums border transition-colors ${
               amount === String(preset)
-                ? "border-[#9d4edd] bg-[#9d4edd]/20 text-[#e0b6ff]"
-                : "border-white/[.12] text-zinc-400 hover:bg-white/[.06]"
+                ? "border-[#9d4edd] bg-[#9d4edd]/20 text-primary-light"
+                : "border-border text-zinc-500 hover:bg-black/[.06] dark:hover:bg-white/[.06]"
             }`}
           >
             +{preset}
@@ -54,7 +54,7 @@ export default function TopUpForm() {
           onChange={(e) => setAmount(e.target.value)}
           min={1}
           max={10000}
-          className="w-24 rounded-lg border border-white/[.12] bg-[#131316] px-3 py-1.5 text-sm tabular-nums text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
+          className="w-24 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm tabular-nums text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
         />
         <button
           type="submit"

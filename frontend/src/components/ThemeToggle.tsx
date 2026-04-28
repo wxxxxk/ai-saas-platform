@@ -23,7 +23,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-      className="rounded-lg p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/[.06] transition-colors"
+      className="rounded-lg p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-black/[.06] dark:hover:bg-white/[.06] transition-colors"
     >
       {isDark ? (
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

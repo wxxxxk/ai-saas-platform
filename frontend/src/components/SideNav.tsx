@@ -36,13 +36,13 @@ export default function SideNav({ user }: { user: SessionUser }) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col border-r border-white/[.08] bg-[#1b1b1e] z-20">
+    <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col border-r border-border bg-surface-low z-20">
       {/* Brand — links to home page */}
-      <div className="px-5 h-14 flex items-center justify-between border-b border-white/[.08] shrink-0">
+      <div className="px-5 h-14 flex items-center justify-between border-b border-border shrink-0">
         <Link
           href="/"
           prefetch={false}
-          className="text-base font-semibold text-white font-headline tracking-tight hover:text-zinc-200 transition-colors"
+          className="text-base font-semibold text-zinc-900 dark:text-white font-headline tracking-tight hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
         >
           AI Studio
         </Link>
@@ -61,8 +61,8 @@ export default function SideNav({ user }: { user: SessionUser }) {
               prefetch={false}
               className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-[#9d4edd]/15 text-[#e0b6ff]"
-                  : "text-zinc-400 hover:text-zinc-100 hover:bg-white/[.06]"
+                  ? "bg-[#9d4edd]/15 text-primary-light"
+                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-black/[.06] dark:hover:bg-white/[.06]"
               }`}
             >
               {label}
@@ -72,13 +72,13 @@ export default function SideNav({ user }: { user: SessionUser }) {
       </nav>
 
       {/* User section */}
-      <div className="px-4 py-4 border-t border-white/[.08] space-y-3 shrink-0">
+      <div className="px-4 py-4 border-t border-border space-y-3 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-full bg-[#9d4edd]/20 flex items-center justify-center text-xs font-semibold text-[#e0b6ff] shrink-0">
+          <div className="h-7 w-7 rounded-full bg-[#9d4edd]/20 flex items-center justify-center text-xs font-semibold text-primary-light shrink-0">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-zinc-200 truncate">{user.name}</p>
+            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{user.name}</p>
             <p className="text-xs text-zinc-500 tabular-nums">
               {balance !== null ? `${balance} cr` : "…"}
             </p>
@@ -88,7 +88,7 @@ export default function SideNav({ user }: { user: SessionUser }) {
           type="button"
           onClick={handleLogout}
           disabled={isPending}
-          className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50"
+          className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors disabled:opacity-50"
         >
           {isPending ? "…" : "로그아웃"}
         </button>

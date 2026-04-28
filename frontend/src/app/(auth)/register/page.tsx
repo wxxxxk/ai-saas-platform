@@ -22,40 +22,40 @@ export default function RegisterPage() {
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="w-full max-w-sm">
         {/* Card */}
-        <div className="rounded-2xl border border-white/[.1] bg-[#1b1b1e] p-8 space-y-6">
+        <div className="rounded-2xl border border-border bg-surface-low p-8 space-y-6">
           <div className="text-center space-y-1">
-            <h1 className="text-2xl font-semibold text-zinc-50 font-headline">회원가입</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 font-headline">회원가입</h1>
+            <p className="text-sm text-zinc-500">
               가입 즉시{" "}
-              <span className="font-medium text-[#e0b6ff]">100 크레딧</span>이 지급됩니다.
+              <span className="font-medium text-primary-light">100 크레딧</span>이 지급됩니다.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">이름</label>
+              <label className="text-xs font-medium text-zinc-500">이름</label>
               <input
                 type="text"
                 name="name"
                 required
                 autoComplete="name"
                 placeholder="홍길동"
-                className="w-full rounded-lg border border-white/[.12] bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">이메일</label>
+              <label className="text-xs font-medium text-zinc-500">이메일</label>
               <input
                 type="email"
                 name="email"
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-white/[.12] bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">
+              <label className="text-xs font-medium text-zinc-500">
                 비밀번호
                 <span className="ml-1 font-normal text-zinc-500">(6자 이상)</span>
               </label>
@@ -66,7 +66,7 @@ export default function RegisterPage() {
                 minLength={6}
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-white/[.12] bg-[#131316] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/50 transition"
               />
             </div>
 
@@ -87,7 +87,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-zinc-500">
             이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="font-medium text-zinc-200 hover:underline">
+            <Link href="/login" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">
               로그인
             </Link>
           </p>

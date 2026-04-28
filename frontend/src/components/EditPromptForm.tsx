@@ -76,13 +76,13 @@ export default function EditPromptForm({
           onChange={(e) => setPrompt(e.target.value)}
           rows={4}
           disabled={isPending}
-          className="w-full resize-none rounded-lg border border-white/[.1] bg-[#131316] px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/40 disabled:opacity-50 transition leading-relaxed"
+          className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#9d4edd]/40 disabled:opacity-50 transition leading-relaxed"
         />
         {isDirty && (
           <button
             type="button"
             onClick={() => setPrompt(initialPrompt)}
-            className="absolute right-2 top-2 rounded px-1.5 py-0.5 text-xs text-zinc-600 hover:text-zinc-400 hover:bg-white/[.05] transition-colors"
+            className="absolute right-2 top-2 rounded px-1.5 py-0.5 text-xs text-zinc-600 hover:text-zinc-400 hover:bg-black/[.05] dark:hover:bg-white/[.05] transition-colors"
           >
             초기화
           </button>
