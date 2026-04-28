@@ -4,7 +4,6 @@ import com.wxxk.aisaas.asset.entity.Asset;
 import com.wxxk.aisaas.asset.repository.AssetRepository;
 import com.wxxk.aisaas.common.exception.EntityNotFoundException;
 import com.wxxk.aisaas.job.entity.Job;
-import com.wxxk.aisaas.job.enums.JobStatus;
 import com.wxxk.aisaas.job.repository.JobRepository;
 import com.wxxk.aisaas.user.entity.User;
 import com.wxxk.aisaas.user.repository.UserRepository;
@@ -41,10 +40,6 @@ public class AssetService {
                 .build();
 
         Asset saved = assetRepository.save(asset);
-
-        if (job.getStatus() != JobStatus.COMPLETED) {
-            job.complete(null);
-        }
 
         return saved;
     }
