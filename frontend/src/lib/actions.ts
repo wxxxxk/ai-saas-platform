@@ -116,6 +116,11 @@ export async function createJob(
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      const cookieStore = await cookies();
+      cookieStore.delete("auth_token");
+      redirect("/login");
+    }
     throw new Error(await parseErrorMessage(res, "Job 생성에 실패했습니다"));
   }
 

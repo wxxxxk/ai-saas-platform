@@ -74,8 +74,11 @@ const STEP_INTERVAL_MS = 2_500;
 
 // ─── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("ko-KR", {
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString("ko-KR", {
     year: "numeric", month: "long", day: "numeric",
     hour: "2-digit", minute: "2-digit",
     hour12: false, timeZone: "Asia/Seoul",
@@ -523,6 +526,9 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
         const updated: Job = await res.json();
 
         setJob((prev) => {
+          if (prev.status !== updated.status) {
+            console.log(`[JobLiveView] ${prev.status} → ${updated.status} (jobId=${initialJob.id})`);
+          }
           if (
             prev.status        === updated.status &&
             prev.outputPayload === updated.outputPayload &&
@@ -536,6 +542,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
         if (!ACTIVE_STATUSES.has(updated.status)) {
           stopped = true;
           setIsPolling(false);
+          console.log(`[JobLiveView] polling stopped: status=${updated.status} jobId=${initialJob.id}`);
 
           if (updated.status === "COMPLETED") {
             setJustCompleted(true);

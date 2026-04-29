@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getCookieStore } from "@/lib/fetch";
 import { getJob, getJobs, JobAuthError, JobNotFoundError } from "@/lib/api";
 import type { Job } from "@/lib/api";
@@ -19,24 +19,19 @@ export default async function JobDetailPage({
   const cookieStore = await getCookieStore();
   const token = cookieStore.get("auth_token")?.value;
 
-  if (!token) {
-    return <AuthErrorPage />;
-  }
+  if (!token) redirect("/login");
 
   let job: Job | null = null;
-  let authError = false;
 
   try {
     job = await getJob(jobId);
   } catch (e) {
     if (e instanceof JobNotFoundError) notFound();
-    if (e instanceof JobAuthError) { authError = true; }
+    if (e instanceof JobAuthError) redirect("/login");
     else throw e;
   }
 
-  if (authError || !job) {
-    return <AuthErrorPage />;
-  }
+  if (!job) notFound();
 
   // ─── 관련 결과 조회 ───────────────────────────────────────────────────────────
   // cookies() 동시 호출 경합 방지를 위해 getJob() 이후 순차 실행한다.
@@ -98,30 +93,3 @@ export default async function JobDetailPage({
   );
 }
 
-// ─── 인증 오류 페이지 ────────────────────────────────────────────────────────
-
-function AuthErrorPage() {
-  return (
-    <div className="max-w-2xl mx-auto px-6 py-10 space-y-6">
-      <Link
-        href="/jobs"
-        prefetch={false}
-        className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-      >
-        ← 히스토리
-      </Link>
-      <div className="rounded-xl border border-border bg-surface-low px-6 py-10 text-center space-y-3">
-        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">접근 권한이 없습니다</p>
-        <p className="text-xs text-zinc-600">
-          세션이 만료되었거나 이 작업에 접근할 권한이 없습니다.
-        </p>
-        <Link
-          href="/login"
-          className="mt-2 inline-block rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 transition-colors"
-        >
-          다시 로그인
-        </Link>
-      </div>
-    </div>
-  );
-}
