@@ -62,6 +62,31 @@ public class JobPersistenceService {
     }
 
     /**
+     * PENDING → RUNNING 상태 전이를 DB에 즉시 반영한다.
+     * polling 클라이언트가 RUNNING을 볼 수 있도록 비동기 실행 직전에 호출한다.
+     */
+    @Transactional
+    public void markRunning(UUID jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new EntityNotFoundException("Job", jobId));
+        job.start();
+        log.info("[JobPersistence] RUNNING: jobId={}", jobId);
+    }
+
+    /**
+     * 비동기 실행 중 복구 불가 오류 발생 시 Job을 FAILED로 강제 전이한다.
+     * executor 내부에서 정상적으로 fail()이 호출된 경우와는 달리,
+     * persistResult()가 호출되지 않은 상황(executor 예외, dispatch 실패 등)에서 사용한다.
+     */
+    @Transactional
+    public void markFailed(UUID jobId, String errorMessage) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new EntityNotFoundException("Job", jobId));
+        job.fail(errorMessage);
+        log.info("[JobPersistence] FAILED (mark): jobId={} error={}", jobId, errorMessage);
+    }
+
+    /**
      * executor가 in-memory로 변경한 Job 엔티티를 DB에 반영한다.
      *
      * save() 는 detached 엔티티를 merge() 한다.

@@ -29,20 +29,18 @@ public class JobService {
     private final CreditWalletService creditWalletService;
     private final List<AiModuleExecutor> executors;
     private final JobPersistenceService jobPersistenceService;
+    private final JobExecutionService jobExecutionService;
 
     /**
-     * Job 생성 및 실행.
+     * Job 생성 후 즉시 PENDING 상태로 반환.
+     * AI 실행은 비동기로 dispatch하여 HTTP 응답을 블로킹하지 않는다.
      *
      * 크레딧 정책:
-     * - 실행 시작 시 차감 (낙관적 차감)
-     * - 실행 실패 시 전액 환불 (API 키 없음 / AI 에러 / executor 미구현 모두 동일)
+     * - createPending() 시점에 차감 (낙관적 차감)
+     * - 실패 시 환불: executor 미발견(동기), dispatch 실패(동기), 비동기 실행 실패(JobExecutionService)
      * - 성공 시에만 차감 확정
      *
-     * DB 커넥션 점유 방지:
-     * - Phase 1: 짧은 TX — 크레딧 차감 + PENDING job 생성 (수십 ms)
-     * - Phase 2: TX 없음 — AI API 호출 (30~90초, 커넥션 미점유)
-     * - Phase 3: 짧은 TX — 결과 저장 (수십 ms)
-     * - Phase 4: 짧은 TX — 실패 시 크레딧 환불 (수십 ms)
+     * 상태 전이: PENDING → RUNNING → COMPLETED / FAILED
      */
     public Job createJob(UUID userId, CreateJobRequest request) {
         AiModule module = aiModuleService.getModuleById(request.getModuleId());
@@ -62,31 +60,38 @@ public class JobService {
                 module.getCreditCostPerCall()
         );
 
-        // Phase 2: TX 없음 — AI API 호출 (커넥션 미점유)
-        Optional<AiModuleExecutor> executor = executors.stream()
+        // Phase 2: executor 선택
+        Optional<AiModuleExecutor> executorOpt = executors.stream()
                 .filter(e -> e.moduleName().equals(module.getName())
                           && e.provider() == resolvedProvider)
                 .findFirst();
 
-        if (executor.isPresent()) {
-            executor.get().execute(job);
-        } else {
+        if (executorOpt.isEmpty()) {
             log.warn("[JobService] No executor: module={} provider={} jobId={}",
                     module.getName(), resolvedProvider, job.getId());
-            job.fail("해당 모듈/공급자 조합의 실행 기능이 아직 구현되지 않았습니다: "
-                    + module.getName() + " / " + resolvedProvider);
+            jobPersistenceService.markFailed(job.getId(),
+                    "해당 모듈/공급자 조합의 실행 기능이 아직 구현되지 않았습니다: "
+                            + module.getName() + " / " + resolvedProvider);
+            creditWalletService.refund(userId, job.getCreditUsed());
+            log.info("[JobService] refunded (no executor): userId={} amount={} jobId={}",
+                    userId, job.getCreditUsed(), job.getId());
+            return job;
         }
 
-        // Phase 3: 짧은 TX — 결과 저장 (detached 엔티티 merge)
-        job = jobPersistenceService.persistResult(job);
-
-        // Phase 4: 짧은 TX — 실패 시 크레딧 환불
-        if (job.getStatus() == JobStatus.FAILED) {
+        // Phase 3: 비동기 dispatch — thread pool 포화 시 RejectedExecutionException
+        try {
+            jobExecutionService.executeJobAsync(job, userId, executorOpt.get());
+        } catch (Exception e) {
+            log.error("[JobService] Async dispatch failed: jobId={} module={} provider={} error={}",
+                    job.getId(), module.getName(), resolvedProvider, e.getMessage(), e);
+            jobPersistenceService.markFailed(job.getId(),
+                    "서버가 바빠 작업을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.");
             creditWalletService.refund(userId, job.getCreditUsed());
-            log.info("[JobService] Credit refunded: userId={} amount={} jobId={}",
+            log.info("[JobService] refunded (dispatch rejected): userId={} amount={} jobId={}",
                     userId, job.getCreditUsed(), job.getId());
         }
 
+        // PENDING Job 즉시 반환 (AI 실행은 백그라운드에서 진행)
         return job;
     }
 
