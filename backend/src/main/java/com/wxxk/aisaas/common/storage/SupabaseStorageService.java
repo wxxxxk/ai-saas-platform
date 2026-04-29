@@ -40,21 +40,28 @@ public class SupabaseStorageService {
 
     @PostConstruct
     void logStatus() {
-        if (!isConfigured()) {
+        boolean urlSet = supabaseUrl != null && !supabaseUrl.isBlank();
+        boolean keySet = serviceKey != null && !serviceKey.isBlank();
+        if (!urlSet || !keySet) {
             log.warn("[SupabaseStorage] supabase.url 또는 supabase.service.key가 설정되지 않았습니다. " +
                     "이미지 생성 결과가 임시 URL로 저장되어 약 1시간 후 만료됩니다.");
-        } else if (serviceKey != null && !serviceKey.startsWith("eyJ")) {
+        } else if (!serviceKey.startsWith("eyJ")) {
             log.warn("[SupabaseStorage] supabase.service.key가 유효한 JWT 형식이 아닙니다 (eyJ로 시작해야 함). " +
                     "Supabase 대시보드 → Settings → API → service_role key 를 확인하세요. " +
-                    "업로드 실패 시 임시 URL로 fallback됩니다.");
+                    "업로드를 시도하지 않고 임시 URL로 저장됩니다.");
         } else {
             log.info("[SupabaseStorage] configured — url={} bucket={}", supabaseUrl, bucket);
         }
     }
 
+    /**
+     * URL과 service key가 모두 설정되고 key가 유효한 JWT(eyJ 시작) 형식인 경우에만 true.
+     * 잘못된 키로 업로드를 시도해 불필요한 이미지 다운로드가 발생하지 않도록 한다.
+     */
     public boolean isConfigured() {
         return supabaseUrl != null && !supabaseUrl.isBlank()
-                && serviceKey != null && !serviceKey.isBlank();
+                && serviceKey != null && !serviceKey.isBlank()
+                && serviceKey.startsWith("eyJ");
     }
 
     /**

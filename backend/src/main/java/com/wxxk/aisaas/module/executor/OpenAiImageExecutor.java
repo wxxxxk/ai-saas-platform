@@ -6,6 +6,7 @@ import com.wxxk.aisaas.job.entity.Job;
 import com.wxxk.aisaas.module.enums.AiProvider;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,12 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
     @Value("${openai.api.key}")
     private String apiKey;
 
-    // DALL-E 생성 최대 90초, Supabase 업로드 별도 30초 커버
+    // DALL-E API 호출용: Authorization 헤더 포함 요청에 사용
     private final RestClient restClient = buildRestClient(90_000);
+
+    // 이미지 다운로드 전용: Authorization 헤더 없는 독립 클라이언트.
+    // downloadImage()에서 uri(URI.create(url))를 통해 SAS 서명 변형 없이 호출된다.
+    private static final RestClient downloadClient = buildRestClient(60_000);
 
     private static RestClient buildRestClient(int readTimeoutMs) {
         var factory = new SimpleClientHttpRequestFactory();
@@ -148,10 +153,16 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
 
     // ─── HTTP 유틸 ──────────────────────────────────────────────────────────────
 
-    /** OpenAI 임시 URL에서 이미지 바이너리를 다운로드한다. */
+    /**
+     * OpenAI 임시 URL에서 이미지 바이너리를 다운로드한다.
+     *
+     * URI.create(url)로 전달: RestClient의 uriBuilderFactory.expand()를 우회해
+     * Azure SAS 서명(sig 파라미터)이 재인코딩되지 않도록 보장한다.
+     * String 오버로드(.uri(url))는 URI template 처리를 거치며 서명을 변형해 HTTP 403을 유발한다.
+     */
     private byte[] downloadImage(String url) {
-        byte[] bytes = restClient.get()
-                .uri(url)
+        byte[] bytes = downloadClient.get()
+                .uri(URI.create(url))
                 .retrieve()
                 .onStatus(status -> !status.is2xxSuccessful(), (req, res) -> {
                     throw new RuntimeException("이미지 다운로드 실패: HTTP " + res.getStatusCode());
