@@ -67,12 +67,12 @@ public class SupabaseStorageService {
     /**
      * 이미지 바이너리를 Supabase Storage에 업로드하고 공개 URL을 반환한다.
      *
-     * @param jobId     Job ID (파일명에 사용: images/{jobId}.png)
+     * @param jobId     Job ID (파일명에 사용: {jobId}.png)
      * @param imageBytes 업로드할 이미지 바이너리
      * @return 영구 공개 URL
      */
     public String uploadImage(UUID jobId, byte[] imageBytes) {
-        String objectPath = "images/" + jobId + ".png";
+        String objectPath = jobId + ".png";
         String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucket + "/" + objectPath;
 
         log.info("[SupabaseStorage] uploading image — jobId={} size={}bytes", jobId, imageBytes.length);
@@ -99,6 +99,6 @@ public class SupabaseStorageService {
      * 저장된 이미지의 공개 URL을 반환한다. (업로드 후 URL 재구성용)
      */
     public String getPublicUrl(UUID jobId) {
-        return supabaseUrl + "/storage/v1/object/public/" + bucket + "/images/" + jobId + ".png";
+        return supabaseUrl + "/storage/v1/object/public/" + bucket + "/" + jobId + ".png";
     }
 }

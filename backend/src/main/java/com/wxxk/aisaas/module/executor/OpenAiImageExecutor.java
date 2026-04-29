@@ -127,13 +127,13 @@ public class OpenAiImageExecutor implements AiModuleExecutor {
 
     /**
      * Job을 COMPLETED로 처리하고 asset을 저장한다.
-     * storageKey: Supabase 경로 ("images/{jobId}.png") 또는 임시 URL
+     * storageKey: Supabase 경로 ("{jobId}.png") 또는 임시 URL
      */
     private void completeWithUrl(Job job, String outputUrl, long sizeBytes) {
         job.complete(outputUrl);
 
         String storageKey = outputUrl.contains("supabase.co")
-                ? "images/" + job.getId() + ".png"
+                ? job.getId() + ".png"
                 : outputUrl;
 
         try {

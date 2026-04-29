@@ -15,6 +15,7 @@ import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { Job } from "@/lib/api";
+import { parseOutput } from "@/lib/parseOutput";
 import { useFavorites, buildGroupKey } from "@/lib/useFavorites";
 import { createJob } from "@/lib/actions";
 import CopyButton from "./CopyButton";
@@ -327,15 +328,23 @@ function SidebarStatus({ job, isPolling }: { job: Job; isPolling: boolean }) {
 
 // ─── 사이드바: 결과 저장 ──────────────────────────────────────────────────────
 
-function SidebarActions({ job, isImage }: { job: Job; isImage: boolean }) {
-  if (job.status !== "COMPLETED" || !job.outputPayload) return null;
+function SidebarActions({
+  job,
+  isImage,
+  value,
+}: {
+  job: Job;
+  isImage: boolean;
+  value: string;
+}) {
+  if (job.status !== "COMPLETED" || !value) return null;
   return (
     <SidebarSection title={isImage ? "이미지 저장" : "텍스트 복사"}>
       {isImage ? (
-        <DownloadButton url={job.outputPayload} />
+        <DownloadButton url={value} />
       ) : (
         <CopyButton
-          text={job.outputPayload}
+          text={value}
           className="w-full rounded-lg border border-border bg-surface-high dark:bg-zinc-800/50 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-surface-highest dark:hover:bg-zinc-700/60 transition-colors text-center"
         />
       )}
@@ -564,12 +573,17 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
 
   // ─── 파생 상태 ──────────────────────────────────────────────────────────────
 
-  const isImage      = job.moduleName === "IMAGE_GENERATION";
-  const isCompleted  = job.status === "COMPLETED";
-  const isFailed     = job.status === "FAILED";
-  const isInProgress = job.status === "PENDING" || job.status === "RUNNING";
-  const hasOutput    = isCompleted && !!job.outputPayload;
-  const hasPrompt    = !!job.inputPayload;
+  const parsedOutput     = parseOutput(job);
+  const isImage          = parsedOutput?.type === "image";
+  const isCompleted      = job.status === "COMPLETED";
+  const isFailed         = job.status === "FAILED";
+  const isInProgress     = job.status === "PENDING" || job.status === "RUNNING";
+  const hasOutput        = isCompleted && parsedOutput !== null;
+  const hasPrompt        = !!job.inputPayload;
+  const outputImageUrl   = parsedOutput?.type === "image" ? parsedOutput.url : "";
+  const outputTextContent =
+    parsedOutput?.type === "text" ? parsedOutput.content :
+    parsedOutput?.type === "raw"  ? parsedOutput.value   : "";
 
   const statusCfg = STATUS_STYLE[job.status]     ?? STATUS_STYLE.PENDING;
   const moduleCfg = MODULE_STYLE[job.moduleName] ?? {
@@ -675,7 +689,7 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
 
             {hasOutput && !isImage && (
               <>
-                <TextResultSection text={job.outputPayload!} highlight={justCompleted} />
+                <TextResultSection text={outputTextContent} highlight={justCompleted} />
 
                 {job.inputPayload && (
                   <div className="mt-3 flex items-center gap-3">
@@ -717,13 +731,13 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
               >
                 <div className="overflow-hidden rounded-lg">
                   <div className="transition-transform duration-500 ease-out hover:scale-[1.03] origin-center">
-                    <ImagePreview src={job.outputPayload!} />
+                    <ImagePreview src={outputImageUrl} />
                   </div>
                 </div>
               </div>
             )}
 
-            {isCompleted && !job.outputPayload && (
+            {isCompleted && !parsedOutput && (
               <div className="rounded-xl border border-border bg-surface-low px-5 py-8 text-center">
                 <p className="text-sm text-zinc-500">결과 데이터가 없습니다.</p>
               </div>
@@ -735,7 +749,11 @@ export default function JobLiveView({ initialJob, relatedJobs }: Props) {
         <aside className="space-y-4 lg:sticky lg:top-8">
 
           <SidebarStatus job={job} isPolling={isPolling} />
-          <SidebarActions job={job} isImage={isImage} />
+          <SidebarActions
+            job={job}
+            isImage={isImage}
+            value={isImage ? outputImageUrl : outputTextContent}
+          />
 
           {isCompleted && hasOutput && groupKey && (
             <SidebarFavorite
