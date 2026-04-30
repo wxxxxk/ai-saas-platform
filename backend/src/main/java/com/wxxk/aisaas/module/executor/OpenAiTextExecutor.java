@@ -81,8 +81,9 @@ public class OpenAiTextExecutor implements AiModuleExecutor {
             return;
         }
 
-        // 2단계: OpenAI 성공 → outputPayload에 텍스트 저장, COMPLETED 확정
-        job.complete(generated);
+        // 2단계: OpenAI 성공 → outputPayload에 JSON envelope 저장, COMPLETED 확정
+        String payload = TextResultPayload.toJson(generated, job.getId().toString(), "openai", MODEL);
+        job.complete(payload);
         log.info("[TEXT_GENERATION] completed: jobId={} outputLength={}", job.getId(), generated.length());
 
         // 3단계: Asset 저장 — 실패해도 job은 COMPLETED 유지 (outputPayload에 결과가 있으므로)

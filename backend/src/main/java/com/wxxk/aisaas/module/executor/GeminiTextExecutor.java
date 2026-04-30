@@ -101,8 +101,9 @@ public class GeminiTextExecutor implements AiModuleExecutor {
             return;
         }
 
-        // 2단계: Gemini 성공 → outputPayload에 텍스트 저장, COMPLETED 확정
-        job.complete(generated);
+        // 2단계: Gemini 성공 → outputPayload에 JSON envelope 저장, COMPLETED 확정
+        String payload = TextResultPayload.toJson(generated, job.getId().toString(), "gemini", MODEL);
+        job.complete(payload);
         log.info("[TEXT_GENERATION/GEMINI] completed: jobId={} outputLength={}",
                 job.getId(), generated.length());
 
