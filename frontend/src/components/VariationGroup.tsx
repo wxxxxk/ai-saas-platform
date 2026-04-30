@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Job } from "@/lib/api";
+import { parseOutput } from "@/lib/parseOutput";
 import { useFavorites } from "@/lib/useFavorites";
 import EditPromptForm from "./EditPromptForm";
 import CopyButton from "./CopyButton";
@@ -93,13 +94,19 @@ function VariationRow({
   isSelected: boolean;
   onToggleFavorite: (() => void) | null; // null = not eligible for selection
 }) {
-  const isImage    = job.moduleName === "IMAGE_GENERATION";
-  const isComplete = job.status === "COMPLETED" && !!job.outputPayload;
-  const isFailed   = job.status === "FAILED";
-  const statusCfg  = STATUS_CFG[job.status] ?? STATUS_CFG.PENDING;
+  const parsed      = parseOutput(job);
+  const isImage     = parsed?.type === "image";
+  const isComplete  = job.status === "COMPLETED" && parsed !== null;
+  const isFailed    = job.status === "FAILED";
+  const statusCfg   = STATUS_CFG[job.status] ?? STATUS_CFG.PENDING;
+
+  const imageUrl    = parsed?.type === "image" ? parsed.url : "";
+  const textContent = parsed?.type === "text"  ? parsed.content
+                    : parsed?.type === "raw"   ? parsed.value
+                    : "";
 
   const previewText = isComplete && !isImage
-    ? job.outputPayload!.slice(0, 120)
+    ? textContent.slice(0, 120)
     : isFailed
       ? (job.errorMessage?.slice(0, 80) ?? "생성 실패")
       : statusCfg.label;
@@ -127,7 +134,7 @@ function VariationRow({
         {isImage && isComplete ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={job.outputPayload!}
+            src={imageUrl}
             alt=""
             className={`h-9 w-9 rounded-md object-cover shrink-0 bg-zinc-900 border ${
               isSelected ? "border-amber-500/40" : "border-white/[.06]"
@@ -202,8 +209,8 @@ function VariationRow({
           </button>
         )}
 
-        {isComplete && !isImage && <CopyButton text={job.outputPayload!} />}
-        {isComplete && isImage    && <DownloadButton url={job.outputPayload!} compact />}
+        {isComplete && !isImage && <CopyButton text={textContent} />}
+        {isComplete && isImage    && <DownloadButton url={imageUrl} compact />}
       </div>
     </div>
   );
@@ -383,7 +390,7 @@ export default function VariationGroup({ group }: { group: VariationGroupData })
       {/* Always-visible rows (first COLLAPSED_COUNT) */}
       <div className="py-1.5 space-y-0.5">
         {group.jobs.slice(0, COLLAPSED_COUNT).map((job, i) => {
-          const canSelect = isFavoriteGroup && job.status === "COMPLETED" && !!job.outputPayload;
+          const canSelect = isFavoriteGroup && job.status === "COMPLETED" && parseOutput(job) !== null;
           return (
             <VariationRow
               key={job.id}
@@ -406,7 +413,7 @@ export default function VariationGroup({ group }: { group: VariationGroupData })
           <div className="overflow-hidden">
             <div className="pb-1.5 space-y-0.5">
               {group.jobs.slice(COLLAPSED_COUNT).map((job) => {
-                const canSelect = isFavoriteGroup && job.status === "COMPLETED" && !!job.outputPayload;
+                const canSelect = isFavoriteGroup && job.status === "COMPLETED" && parseOutput(job) !== null;
                 return (
                   <VariationRow
                     key={job.id}

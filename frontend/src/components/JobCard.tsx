@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Job } from "@/lib/api";
+import { parseOutput } from "@/lib/parseOutput";
 import CopyButton from "./CopyButton";
 import DownloadButton from "./DownloadButton";
 import RegenerateButton from "./RegenerateButton";
@@ -35,24 +36,25 @@ function formatDate(iso: string) {
 // ─── 콘텐츠 미리보기 ───────────────────────────────────────────────────────────
 
 function ContentPreview({ job }: { job: Job }) {
-  const isImage = job.moduleName === "IMAGE_GENERATION";
+  const parsed = parseOutput(job);
 
-  if (job.status === "COMPLETED" && job.outputPayload) {
-    if (isImage) {
+  if (job.status === "COMPLETED" && parsed) {
+    if (parsed.type === "image") {
       return (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={job.outputPayload}
+          src={parsed.url}
           alt="생성된 이미지"
           className="w-full h-40 object-cover rounded-lg bg-zinc-900"
           loading="lazy"
         />
       );
     }
+    const text = parsed.type === "text" ? parsed.content : parsed.value;
     return (
       <div className="rounded-lg bg-surface border border-border-faint px-3 py-2.5 h-[6.5rem] overflow-hidden">
         <p className="text-xs text-zinc-500 leading-relaxed line-clamp-4">
-          {job.outputPayload}
+          {text}
         </p>
       </div>
     );
@@ -94,11 +96,16 @@ function ContentPreview({ job }: { job: Job }) {
 // Link 외부에 위치해 <a> 중첩 문제를 방지한다.
 
 function CardActions({ job }: { job: Job }) {
-  const isImage    = job.moduleName === "IMAGE_GENERATION";
-  const isComplete = job.status === "COMPLETED";
-  const isFailed   = job.status === "FAILED";
-  const hasOutput  = !!job.outputPayload;
-  const hasPrompt  = !!job.inputPayload;
+  const parsed      = parseOutput(job);
+  const isComplete  = job.status === "COMPLETED";
+  const isFailed    = job.status === "FAILED";
+  const hasOutput   = parsed !== null;
+  const hasPrompt   = !!job.inputPayload;
+
+  const imageUrl    = parsed?.type === "image" ? parsed.url : null;
+  const textContent = parsed?.type === "text"  ? parsed.content
+                    : parsed?.type === "raw"   ? parsed.value
+                    : null;
 
   // 액션 없는 상태 (PENDING / RUNNING / CANCELLED)
   if (!isComplete && !isFailed) return null;
@@ -108,11 +115,11 @@ function CardActions({ job }: { job: Job }) {
   return (
     <div className="px-4 pb-4">
       <div className="border-t border-border-faint pt-3 flex items-center gap-1.5 flex-wrap">
-        {isComplete && hasOutput && !isImage && (
-          <CopyButton text={job.outputPayload!} />
+        {isComplete && textContent !== null && (
+          <CopyButton text={textContent} />
         )}
-        {isComplete && hasOutput && isImage && (
-          <DownloadButton url={job.outputPayload!} compact />
+        {isComplete && imageUrl !== null && (
+          <DownloadButton url={imageUrl} compact />
         )}
         {hasPrompt && (
           <RegenerateButton

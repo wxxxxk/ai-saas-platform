@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Job } from "@/lib/api";
+import { parseOutput } from "@/lib/parseOutput";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("ko-KR", {
@@ -13,6 +14,8 @@ function formatDate(iso: string) {
 }
 
 function ImageResultCard({ job }: { job: Job }) {
+  const parsed   = parseOutput(job);
+  const imageUrl = parsed?.type === "image" ? parsed.url : "";
   return (
     <Link
       href={`/jobs/${job.id}`}
@@ -20,7 +23,7 @@ function ImageResultCard({ job }: { job: Job }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={job.outputPayload!}
+        src={imageUrl}
         alt={job.inputPayload ?? "Generated image"}
         className="w-full h-full object-cover"
         loading="lazy"
@@ -39,6 +42,10 @@ function ImageResultCard({ job }: { job: Job }) {
 }
 
 function TextResultCard({ job }: { job: Job }) {
+  const parsed      = parseOutput(job);
+  const textContent = parsed?.type === "text" ? parsed.content
+                    : parsed?.type === "raw"  ? parsed.value
+                    : null;
   return (
     <Link
       href={`/jobs/${job.id}`}
@@ -55,9 +62,9 @@ function TextResultCard({ job }: { job: Job }) {
           &ldquo;{job.inputPayload}&rdquo;
         </p>
       )}
-      {job.outputPayload && (
+      {textContent && (
         <p className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-          {job.outputPayload}
+          {textContent}
         </p>
       )}
     </Link>

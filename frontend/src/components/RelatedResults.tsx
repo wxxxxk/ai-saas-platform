@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Job } from "@/lib/api";
 import type { FavoritesApi } from "@/lib/useFavorites";
+import { parseOutput } from "@/lib/parseOutput";
 import CopyButton from "./CopyButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -102,6 +103,15 @@ function TextComparison({
 }) {
   const [target, setTarget] = useState<Job | null>(null);
 
+  const currentParsed  = parseOutput(current);
+  const currentText    = currentParsed?.type === "text" ? currentParsed.content
+                       : currentParsed?.type === "raw"  ? currentParsed.value
+                       : "";
+  const targetParsed   = target ? parseOutput(target) : null;
+  const targetText     = targetParsed?.type === "text" ? targetParsed.content
+                       : targetParsed?.type === "raw"  ? targetParsed.value
+                       : "";
+
   const isSelected = (jobId: string) =>
     !!(groupKey && favoritesApi?.isFavorite(groupKey, jobId));
   const toggle = (jobId: string) => {
@@ -122,7 +132,7 @@ function TextComparison({
         </span>
         {related.map((job) => {
           const isActive   = target?.id === job.id;
-          const canCompare = job.status === "COMPLETED" && !!job.outputPayload;
+          const canCompare = job.status === "COMPLETED" && parseOutput(job) !== null;
           const selected   = isSelected(job.id);
           return (
             <button
@@ -172,14 +182,14 @@ function TextComparison({
                 )}
               </span>
               <div className="flex items-center gap-1">
-                {groupKey && favoritesApi && current.outputPayload && (
+                {groupKey && favoritesApi && currentParsed !== null && (
                   <StarButton
                     isSelected={isSelected(current.id)}
                     onToggle={() => toggle(current.id)}
                     alwaysVisible
                   />
                 )}
-                {current.outputPayload && <CopyButton text={current.outputPayload} />}
+                {currentText && <CopyButton text={currentText} />}
               </div>
             </div>
             <div
@@ -190,7 +200,7 @@ function TextComparison({
               }`}
             >
               <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-7">
-                {current.outputPayload ?? ""}
+                {currentText}
               </p>
             </div>
           </div>
@@ -205,14 +215,14 @@ function TextComparison({
                 )}
               </span>
               <div className="flex items-center gap-2 shrink-0">
-                {groupKey && favoritesApi && target.outputPayload && (
+                {groupKey && favoritesApi && targetParsed !== null && (
                   <StarButton
                     isSelected={isSelected(target.id)}
                     onToggle={() => toggle(target.id)}
                     alwaysVisible
                   />
                 )}
-                {target.outputPayload && <CopyButton text={target.outputPayload} />}
+                {targetText && <CopyButton text={targetText} />}
                 <Link
                   href={`/jobs/${target.id}`}
                   prefetch={false}
@@ -229,9 +239,9 @@ function TextComparison({
                   : "border-border bg-surface"
               }`}
             >
-              {target.status === "COMPLETED" && target.outputPayload ? (
+              {target.status === "COMPLETED" && targetText ? (
                 <p className="text-sm text-zinc-600 dark:text-zinc-300 whitespace-pre-wrap leading-7">
-                  {target.outputPayload}
+                  {targetText}
                 </p>
               ) : target.status === "FAILED" ? (
                 <p className="text-xs text-red-400 leading-relaxed">생성에 실패한 결과입니다.</p>
@@ -249,8 +259,12 @@ function TextComparison({
 
         <div className="rounded-xl border border-border bg-surface overflow-hidden divide-y divide-black/[.04] dark:divide-white/[.04]">
           {related.map((job) => {
-            const canCompare = job.status === "COMPLETED" && !!job.outputPayload;
-            const selected   = isSelected(job.id);
+            const jobParsed     = parseOutput(job);
+            const canCompare    = job.status === "COMPLETED" && jobParsed !== null;
+            const selected      = isSelected(job.id);
+            const previewText   = jobParsed?.type === "text" ? jobParsed.content.slice(0, 90)
+                                : jobParsed?.type === "raw"  ? jobParsed.value.slice(0, 90)
+                                : null;
             return (
               <div
                 key={job.id}
@@ -263,11 +277,7 @@ function TextComparison({
                   {relativeTime(job.createdAt)}
                 </span>
                 <p className="flex-1 min-w-0 text-xs text-zinc-600 truncate">
-                  {job.outputPayload
-                    ? job.outputPayload.slice(0, 90)
-                    : job.status === "FAILED"
-                      ? "생성 실패"
-                      : "처리 중…"}
+                  {previewText ?? (job.status === "FAILED" ? "생성 실패" : "처리 중…")}
                 </p>
                 <div className="flex items-center gap-2 shrink-0">
                   {selected && (
@@ -328,8 +338,10 @@ function ImageGallery({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
       {all.map((job, i) => {
+        const jobParsed  = parseOutput(job);
+        const imageUrl   = jobParsed?.type === "image" ? jobParsed.url : "";
         const isCurrent  = job.id === current.id;
-        const hasImage   = job.status === "COMPLETED" && !!job.outputPayload;
+        const hasImage   = jobParsed?.type === "image";
         const selected   = isSelected(job.id);
         const canSelect  = hasImage && !!groupKey && !!favoritesApi;
 
@@ -349,7 +361,7 @@ function ImageGallery({
               {hasImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={job.outputPayload!}
+                  src={imageUrl}
                   alt={`Variation ${i + 1}`}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -442,8 +454,12 @@ function RelatedList({
   return (
     <div className="rounded-xl border border-border bg-surface overflow-hidden divide-y divide-black/[.04] dark:divide-white/[.04]">
       {related.map((job) => {
-        const canSelect = job.status === "COMPLETED" && !!job.outputPayload && !!groupKey && !!favoritesApi;
-        const selected  = isSelected(job.id);
+        const jobParsed   = parseOutput(job);
+        const canSelect   = job.status === "COMPLETED" && jobParsed !== null && !!groupKey && !!favoritesApi;
+        const selected    = isSelected(job.id);
+        const previewText = jobParsed?.type === "text" ? jobParsed.content.slice(0, 90)
+                          : jobParsed?.type === "raw"  ? jobParsed.value.slice(0, 90)
+                          : null;
         return (
           <div
             key={job.id}
@@ -456,11 +472,7 @@ function RelatedList({
               {relativeTime(job.createdAt)}
             </span>
             <p className="flex-1 min-w-0 text-xs text-zinc-600 truncate">
-              {job.status === "COMPLETED" && job.outputPayload
-                ? job.outputPayload.slice(0, 90)
-                : job.status === "FAILED"
-                  ? "생성 실패"
-                  : "처리 중…"}
+              {previewText ?? (job.status === "FAILED" ? "생성 실패" : "처리 중…")}
             </p>
             <div className="flex items-center gap-2 shrink-0">
               {selected && <StarIcon filled className="h-3.5 w-3.5 text-amber-400" />}
@@ -488,7 +500,7 @@ export default function RelatedResults({ currentJob, relatedJobs, favoritesApi }
   if (relatedJobs.length === 0) return null;
 
   const isImage       = currentJob.moduleName === "IMAGE_GENERATION";
-  const isCurrentDone = currentJob.status === "COMPLETED" && !!currentJob.outputPayload;
+  const isCurrentDone = currentJob.status === "COMPLETED" && parseOutput(currentJob) !== null;
 
   const groupKey = currentJob.inputPayload
     ? `${currentJob.moduleName}::${currentJob.inputPayload}`

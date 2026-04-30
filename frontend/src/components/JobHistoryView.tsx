@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { Job } from "@/lib/api";
+import { parseOutput } from "@/lib/parseOutput";
 import VariationGroup, { type VariationGroupData } from "./VariationGroup";
 import { useFavorites } from "@/lib/useFavorites";
 
@@ -46,7 +47,11 @@ type SelectedItem = { group: VariationGroupData; job: Job };
 
 function SelectedCard({ item }: { item: SelectedItem }) {
   const { group, job } = item;
-  const isImage   = job.moduleName === "IMAGE_GENERATION";
+  const parsed      = parseOutput(job);
+  const imageUrl    = parsed?.type === "image" ? parsed.url : null;
+  const textContent = parsed?.type === "text"  ? parsed.content
+                    : parsed?.type === "raw"   ? parsed.value
+                    : null;
   const modCfg    = MODULE_CFG_SELECTED[job.moduleName] ?? {
     label: job.moduleName,
     badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
@@ -91,19 +96,19 @@ function SelectedCard({ item }: { item: SelectedItem }) {
         </p>
 
         {/* Output preview */}
-        {isImage && job.outputPayload ? (
+        {imageUrl ? (
           <div className="overflow-hidden rounded-lg border border-amber-500/15 bg-zinc-900">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={job.outputPayload}
+              src={imageUrl}
               alt=""
               className="w-full h-44 object-cover"
               loading="lazy"
             />
           </div>
-        ) : job.outputPayload ? (
+        ) : textContent ? (
           <p className="text-xs text-zinc-500 line-clamp-4 leading-relaxed rounded-lg border border-border-faint bg-surface px-3.5 py-3">
-            {job.outputPayload.slice(0, 220)}
+            {textContent.slice(0, 220)}
           </p>
         ) : null}
 
