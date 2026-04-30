@@ -34,12 +34,23 @@ public class JobPersistenceService {
 
     /**
      * 크레딧 차감 + PENDING Job 생성을 하나의 짧은 트랜잭션으로 처리.
-     * 이 메서드가 완료되면 DB 커넥션이 즉시 반환된다.
-     * 이후 AI API 호출은 커넥션을 점유하지 않는다.
+     * pipeline 필드를 포함하는 7-arg 버전 위임.
      */
     @Transactional
     public Job createPending(UUID userId, UUID moduleId, AiProvider provider,
                               String inputPayload, int creditCost) {
+        return createPending(userId, moduleId, provider, inputPayload, creditCost, null, null);
+    }
+
+    /**
+     * 크레딧 차감 + PENDING Job 생성 (pipeline 필드 포함).
+     * parentJobId: 이 Job을 트리거한 부모 Job ID (단일 Job이면 null)
+     * nextModuleName: 완료 후 자동 실행할 모듈 이름 (없으면 null)
+     */
+    @Transactional
+    public Job createPending(UUID userId, UUID moduleId, AiProvider provider,
+                              String inputPayload, int creditCost,
+                              UUID parentJobId, String nextModuleName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         AiModule module = aiModuleService.getModuleById(moduleId);
@@ -53,11 +64,13 @@ public class JobPersistenceService {
                 .status(JobStatus.PENDING)
                 .inputPayload(inputPayload)
                 .creditUsed(creditCost)
+                .parentJobId(parentJobId)
+                .nextModuleName(nextModuleName)
                 .build();
 
         Job saved = jobRepository.save(job);
-        log.info("[JobPersistence] PENDING: jobId={} userId={} provider={}",
-                saved.getId(), userId, provider);
+        log.info("[JobPersistence] PENDING: jobId={} userId={} provider={} parentJobId={}",
+                saved.getId(), userId, provider, parentJobId);
         return saved;
     }
 

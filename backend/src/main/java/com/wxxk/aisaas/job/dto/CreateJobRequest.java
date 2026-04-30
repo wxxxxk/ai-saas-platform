@@ -25,4 +25,11 @@ public class CreateJobRequest {
      * 프론트엔드는 이 필드를 보내지 않아도 되며, 기존 동작은 그대로 유지된다.
      */
     private AiProvider provider;
+
+    /**
+     * 이 Job 완료 후 자동으로 실행할 다음 모듈 이름 (선택).
+     * 예: "IMAGE_GENERATION" — TEXT_GENERATION 결과를 입력으로 이미지 생성 Job을 연결한다.
+     * null이면 단일 Job으로 종료된다.
+     */
+    private String nextModuleName;
 }

@@ -15,7 +15,9 @@ public record JobResponse(
         String outputPayload,
         String errorMessage,
         LocalDateTime createdAt,
-        String provider   // AI 공급자 이름 (예: "OPENAI"). 프론트엔드는 현재 이 필드를 무시해도 된다.
+        String provider,        // AI 공급자 이름 (예: "OPENAI")
+        UUID parentJobId,       // pipeline: 이 Job을 트리거한 부모 Job ID (없으면 null)
+        String nextModuleName   // pipeline: 완료 후 실행될 다음 모듈 이름 (없으면 null)
 ) {
     public static JobResponse from(Job job) {
         return new JobResponse(
@@ -29,7 +31,9 @@ public record JobResponse(
                 job.getOutputPayload(),
                 job.getErrorMessage(),
                 job.getCreatedAt(),
-                job.getProvider().name()
+                job.getProvider().name(),
+                job.getParentJobId(),
+                job.getNextModuleName()
         );
     }
 }

@@ -57,7 +57,9 @@ public class JobService {
                 request.getModuleId(),
                 resolvedProvider,
                 request.getInputPayload(),
-                module.getCreditCostPerCall()
+                module.getCreditCostPerCall(),
+                null,                            // parentJobId: 사용자가 직접 생성하는 Job
+                request.getNextModuleName()
         );
 
         // Phase 2: executor 선택

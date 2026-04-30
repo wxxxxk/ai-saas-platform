@@ -63,15 +63,25 @@ public class Job extends BaseEntity {
     @Column
     private LocalDateTime completedAt;
 
+    // Pipeline support — both nullable
+    @Column
+    private java.util.UUID parentJobId;
+
+    @Column
+    private String nextModuleName;
+
     @Builder
     private Job(User user, AiModule module, JobStatus status, String inputPayload,
-                Integer creditUsed, AiProvider provider) {
+                Integer creditUsed, AiProvider provider,
+                java.util.UUID parentJobId, String nextModuleName) {
         this.user = user;
         this.module = module;
         this.status = status;
         this.inputPayload = inputPayload;
         this.creditUsed = creditUsed;
         this.provider = provider != null ? provider : AiProvider.OPENAI;
+        this.parentJobId = parentJobId;
+        this.nextModuleName = nextModuleName;
     }
 
     public void start() {
