@@ -97,9 +97,17 @@ public class JobExecutionService {
 
     // ─── Pipeline chain dispatch ──────────────────────────────────────────────────
 
+    static final int MAX_CHAIN_DEPTH = 2;
+
     private void dispatchChainJob(Job completedJob, UUID userId) {
         String nextModuleName = completedJob.getNextModuleName();
         try {
+            if (completedJob.getChainDepth() >= MAX_CHAIN_DEPTH) {
+                log.warn("[JobExecution] chain stopped: depth limit exceeded: parentJobId={} depth={} maxDepth={}",
+                        completedJob.getId(), completedJob.getChainDepth(), MAX_CHAIN_DEPTH);
+                return;
+            }
+
             AiModule nextModule = aiModuleService.getModuleByName(nextModuleName);
             if (!nextModule.isActive()) {
                 log.warn("[JobExecution] chain skipped — module inactive: nextModule={} parentJobId={}",
@@ -119,6 +127,9 @@ public class JobExecutionService {
                 return;
             }
 
+            int childDepth = completedJob.getChainDepth() + 1;
+            // nextModuleName을 child에게 전달해서 다음 단계도 체인을 이어갈 수 있게 한다.
+            // depth 제한에 걸리면 child 완료 시 dispatchChainJob이 차단한다.
             String chainInput = extractChainInput(completedJob.getOutputPayload());
             Job chainJob = jobPersistenceService.createPending(
                     userId,
@@ -127,11 +138,12 @@ public class JobExecutionService {
                     chainInput,
                     nextModule.getCreditCostPerCall(),
                     completedJob.getId(),
-                    null
+                    completedJob.getNextModuleName(),
+                    childDepth
             );
 
-            log.info("[JobExecution] chain dispatch: parentJobId={} chainJobId={} nextModule={}",
-                    completedJob.getId(), chainJob.getId(), nextModuleName);
+            log.info("[JobExecution] chain dispatch: parentJobId={} chainJobId={} nextModule={} childDepth={}",
+                    completedJob.getId(), chainJob.getId(), nextModuleName, childDepth);
 
             // ApplicationContext 경유로 self-call → @Async 프록시가 적용된다
             applicationContext.getBean(JobExecutionService.class)

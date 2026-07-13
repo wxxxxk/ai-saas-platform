@@ -17,7 +17,8 @@ public record JobResponse(
         LocalDateTime createdAt,
         String provider,        // AI 공급자 이름 (예: "OPENAI")
         UUID parentJobId,       // pipeline: 이 Job을 트리거한 부모 Job ID (없으면 null)
-        String nextModuleName   // pipeline: 완료 후 실행될 다음 모듈 이름 (없으면 null)
+        String nextModuleName,  // pipeline: 완료 후 실행될 다음 모듈 이름 (없으면 null)
+        int chainDepth          // pipeline: 체인 내 깊이 (단일 Job=0, child=1, ...)
 ) {
     public static JobResponse from(Job job) {
         return new JobResponse(
@@ -33,7 +34,8 @@ public record JobResponse(
                 job.getCreatedAt(),
                 job.getProvider().name(),
                 job.getParentJobId(),
-                job.getNextModuleName()
+                job.getNextModuleName(),
+                job.getChainDepth()
         );
     }
 }

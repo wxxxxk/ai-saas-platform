@@ -63,17 +63,22 @@ public class Job extends BaseEntity {
     @Column
     private LocalDateTime completedAt;
 
-    // Pipeline support — both nullable
+    // Pipeline support — parentJobId/nextModuleName nullable, chainDepth defaults to 0
     @Column
     private java.util.UUID parentJobId;
 
     @Column
     private String nextModuleName;
 
+    // ddl-auto=update(H2)에서 기존 행이 있는 테이블에 NOT NULL 컬럼을 추가하려면
+    // DEFAULT 0이 필요하다. prod Flyway V3도 동일하게 DEFAULT 0으로 맞춘다.
+    @Column(nullable = false, columnDefinition = "INTEGER DEFAULT 0")
+    private int chainDepth;
+
     @Builder
     private Job(User user, AiModule module, JobStatus status, String inputPayload,
                 Integer creditUsed, AiProvider provider,
-                java.util.UUID parentJobId, String nextModuleName) {
+                java.util.UUID parentJobId, String nextModuleName, int chainDepth) {
         this.user = user;
         this.module = module;
         this.status = status;
@@ -82,6 +87,7 @@ public class Job extends BaseEntity {
         this.provider = provider != null ? provider : AiProvider.OPENAI;
         this.parentJobId = parentJobId;
         this.nextModuleName = nextModuleName;
+        this.chainDepth = chainDepth; // 미설정 시 int 기본값 0
     }
 
     public void start() {

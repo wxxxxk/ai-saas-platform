@@ -32,25 +32,30 @@ public class JobPersistenceService {
     private final AiModuleService aiModuleService;
     private final CreditWalletService creditWalletService;
 
-    /**
-     * 크레딧 차감 + PENDING Job 생성을 하나의 짧은 트랜잭션으로 처리.
-     * pipeline 필드를 포함하는 7-arg 버전 위임.
-     */
+    /** 단일 Job 생성 (사용자 직접 요청). chainDepth=0, pipeline 없음. */
     @Transactional
     public Job createPending(UUID userId, UUID moduleId, AiProvider provider,
                               String inputPayload, int creditCost) {
-        return createPending(userId, moduleId, provider, inputPayload, creditCost, null, null);
+        return createPending(userId, moduleId, provider, inputPayload, creditCost, null, null, 0);
     }
 
-    /**
-     * 크레딧 차감 + PENDING Job 생성 (pipeline 필드 포함).
-     * parentJobId: 이 Job을 트리거한 부모 Job ID (단일 Job이면 null)
-     * nextModuleName: 완료 후 자동 실행할 모듈 이름 (없으면 null)
-     */
+    /** 사용자가 nextModuleName을 지정한 경우. chainDepth=0 (chain의 첫 번째 Job). */
     @Transactional
     public Job createPending(UUID userId, UUID moduleId, AiProvider provider,
                               String inputPayload, int creditCost,
                               UUID parentJobId, String nextModuleName) {
+        return createPending(userId, moduleId, provider, inputPayload, creditCost,
+                parentJobId, nextModuleName, 0);
+    }
+
+    /**
+     * 크레딧 차감 + PENDING Job 생성 (pipeline + depth 포함).
+     * chainDepth: 체인 내 깊이 (단일 Job=0, 첫 번째 child=1, ...)
+     */
+    @Transactional
+    public Job createPending(UUID userId, UUID moduleId, AiProvider provider,
+                              String inputPayload, int creditCost,
+                              UUID parentJobId, String nextModuleName, int chainDepth) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         AiModule module = aiModuleService.getModuleById(moduleId);
@@ -66,11 +71,12 @@ public class JobPersistenceService {
                 .creditUsed(creditCost)
                 .parentJobId(parentJobId)
                 .nextModuleName(nextModuleName)
+                .chainDepth(chainDepth)
                 .build();
 
         Job saved = jobRepository.save(job);
-        log.info("[JobPersistence] PENDING: jobId={} userId={} provider={} parentJobId={}",
-                saved.getId(), userId, provider, parentJobId);
+        log.info("[JobPersistence] PENDING: jobId={} userId={} provider={} parentJobId={} chainDepth={}",
+                saved.getId(), userId, provider, parentJobId, chainDepth);
         return saved;
     }
 
